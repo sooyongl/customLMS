@@ -1,7 +1,7 @@
 # customLMS
-Customized LMS approach for FLPS models
 
-**Customized EM algorithm is programmed for FLPS models based on `nlsem` pacakge. **
+## Customized LMS approach for FLPS models
+- Customized EM algorithm is programmed for FLPS models based on `nlsem` pacakge.
 
 - `customized_em.R` runs LMS for FLPS models (but there's no missing data. Missing data could be treated by FIML)
   - `mvtnorm` package is needed for normal density
