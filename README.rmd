@@ -1,0 +1,76 @@
+---
+output: github_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(
+  echo = F,message = F,
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "vignettes",
+  out.width = "100%"
+)
+
+library(MplusAutomation)
+library(tidyverse)
+
+options(tibble.print_min = 5, tibble.print_max = 5)
+```
+
+# customLMS
+
+## Customized LMS approach for FLPS models
+- Customized EM algorithm is programmed for FLPS models based on `nlsem` pacakge.
+
+- `customized_em.R` runs LMS for FLPS models (but there's no missing data. Missing data could be treated by FIML)
+  - `mvtnorm` package is needed for normal density
+  - `gaussquad` is needed for Hermite-Gaussian quadrature
+  - `nlme::fdHess` is needed to compute Hessian matrix for SE
+- `Custom_LMS.RDS` is a result of `customized_em.R`
+- `Mplus_LMS.out` is a result of Mplus for benchmark
+
+## Data
+
+```{r, echo = F}
+read_csv("test_dt.csv", col_names = F) %>% set_names(c("x1","x2","x3","x4","x5","y1"))
+```
+
+
+
+## Model
+
+- 3 continuous indicators (x1-x3 same as v1-v3)
+- One cavariate (x5 same as x)
+- Treatment assignment (x4 same as z)
+
+
+```{r}
+knitr::include_graphics("Picture1.png")
+```
+
+## EM algorithm for LMS
+
+- `customized_em.R`
+
+
+## Results
+
+```{r}
+
+readModels("Mplus_LMS.out")$parameters$unstandardized %>% 
+  slice(c(2:3, 4, 6, 7, 21:23, 24, 20, 9, 8,15,16, 17, 13,   5)) %>% 
+  mutate(Customized_LMS = round(readRDS("Custom_LMS.RDS")$par,3)) %>% 
+  rename("Mplus_LMS" = "est") %>% 
+  select(paramHeader, param, Mplus_LMS, Customized_LMS)
+  
+  
+```
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+
