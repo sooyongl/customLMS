@@ -1,0 +1,60 @@
+VERSION 1.1.0
+INPUT
+DATA:
+ file is test_dt.csv;
+VARIABLE:
+ names are v1-v3 z x y;
+ANALYSIS:
+   type = random;
+    ALGORITHM=INTEGRATION;
+OUTPUT:
+ tech1 tech2 tech3 tech4;
+MODEL:
+  F1 by v1@1 v2-v3;
+  [v1@0];
+  [v2-v3];
+  [F1];
+  F1*;
+  F1 with z;
+  F1 with x;
+  F1z | F1 XWITH z;
+  y on F1 z x;
+  y on F1z ;
+  [y];
+  y  ;
+INPUT_END
+2
+0
+0
+0
+MLR
+1
+GENERAL
+0
+6
+2
+0
+v1 v2 v3 y z x f1 f1z
+2
+-1 -1 -1 1 0 0 0 0
+0
+1
+f1
+v1 v2 v3
+1 1 f1 v1    1.000    0.000
+1 1 f1 v2    1.043    0.023
+1 1 f1 v3    0.909    0.022
+1 1 z y    0.113    0.048
+1 1 x y   -0.002    0.011
+1 1 f1 y    0.240    0.056
+1 1 f1z y   -0.027    0.016
+2 1 x z    0.334    0.020
+2 1 f1 z    0.084    0.015
+2 1 f1 x    0.108    0.018
+4 1 v1    0.088    0.008
+4 1 v2    0.123    0.009
+4 1 v3    0.129    0.008
+4 1 y    0.060    0.003
+5 1 z    0.468    0.020
+5 1 x    0.677    0.031
+5 1 f1    0.488    0.021

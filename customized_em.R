@@ -15,6 +15,7 @@ fdHess <- nlme::fdHess
 # Load data and model matrix ----------------------------------------------
 inp <- readRDS("data_and_modelSpec.RDS")
 
+
 data <- inp$data 
 # x1-x3: factor indicators
 # x4 : Z
