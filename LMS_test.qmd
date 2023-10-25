@@ -1,0 +1,510 @@
+---
+title: "Test"
+format: html
+execute:
+  cache: true
+---
+
+```{r echo = FALSE, include=F}
+
+
+# rm(list = ls())
+for(i in c("source/utils.R",
+           "source/customized_sampleStat.R",
+           "source/customized_Likelihood.R")) { source(i) }
+
+# `mvtnorm` package is needed for normal density
+# `gaussquad` is needed for Hermite-Gaussian quadrature
+# `nlme::fdHess` is needed to compute Hessian matrix for SE
+library(tidyverse)
+library(mvtnorm)
+library(gaussquad)
+fdHess <- nlme::fdHess
+
+
+# Load data and model matrix ----------------------------------------------
+inp <- readRDS("data_and_modelSpec.RDS")
+
+
+data <- inp$data 
+# x1-x3: factor indicators
+# x4 : Z
+# x5 : x covariate
+# y1 : outcome Y
+
+inp_model <- list(
+  matrices = inp$model$matrices,
+  info = inp$model$info)
+pars.start <- inp$pars.start
+
+
+# ------------------------------------------------------
+# Compute EM algorithm for LMS
+# -------------------------------------------------------
+
+# Argument inputs --------------------------------------
+# These arguments come from `em` function in `nlsem` package
+
+model = inp_model     # Model matrix
+data = data          # input data
+start =  pars.start  # Starting values
+
+max.iter = 1000        # Maximum iteration for EM; default is 200
+max.mstep = 1        # Iteration for mstep; default is 1
+convergence = 0.01   # 
+m = 16               # number of quadrature points
+
+neg.hessian = FALSE  # for getting SE (For Hessian matrix)
+optimizer = "nlminb" # Obtain MLE
+
+max.singleClass = 1  
+qml = F              # Alternative to LMS
+
+# EM Estimation begins ----------------------------------------------------
+## Name starting values (e.g., negative value for variances)  
+par.new <- start
+
+ll.ret <- NULL # Save likelihoods across iterations (from M step)
+ll.new <- 0    # Likelihood every iteration (from M step)
+
+num.iter <- 0
+run <- TRUE
+
+ll.old <- ll.new
+par.old <- par.new # par.new will keep updated
+  
+model = model
+parameters = par.old
+dat = data
+m = m
+
+##### Compute E-step         <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+mod.filled <- fill_model(model = model, parameters = parameters)
+```
+
+```{css, echo=FALSE}
+.two-columns {
+  display: flex;
+  justify-content: space-between;
+}
+.column {
+  width: 45%;
+}
+```
+
+
+I first apologize that I start this study with the limited knowledge. I just wantted the sutdy to focus on comparing the results between estimators, not explicating the procedure of LMS (because LMS is commonly used and many previous results confirm its validity for latent interaction effects). The following is my understanding of what and how LMS does in accordance to KM 2000 paper.
+
+If the following isn't understandable and still doutful, I'm open to drop this study. I don't think I can do much better.
+
+## LMS with one latent factor and a binary obervsed variable
+
+Although intial LMS considers the interaction effects between two latent variables, it can be readily generalized to the interaction between one latent factor and an observed variable. There is no limit for LMS specification with an observed variable.
+
+The binary variable like treatment assignments is treated as continous variable like in a typical regression model with dummy variable.
+
+Below is the estimation procedure with one latent variable (3 continuous indicators) and one binary variable (Z; like treatment status), and one covariate (x1). (Note: with binary indicators, things are a little bit different, I'll elaborate on this later)
+
+This procedure follows Klein and Moosburger 2000, and the results are identical to Mplus.
+
+What I want to show here is that it is okay to treat the observed binary variable as continuous. Because it is "independent" variable
+
+## LMS specification
+
+Our strcutrual model can be re-formulated as:
+
+$$
+y = \alpha +
+\begin{pmatrix} \omega & \tau_0 & \gamma_1  \\ \end{pmatrix}
+\begin{pmatrix} \eta_1 \\ z \\ x_1 \\ \end{pmatrix} +
+\begin{pmatrix} \eta_1 \\ z \\ x_1 \\ \end{pmatrix}^T
+\begin{pmatrix} 0 & \tau_1 & 0 \\ 0 & 0 & 0  \\ 0 & 0 & 0  \\ \end{pmatrix}
+\begin{pmatrix} \eta_1 \\ z \\ x_1 \\ \end{pmatrix} +
+\varepsilon
+$$
+
+```{=tex}
+\begin{align}
+\eta_1 = \beta_1x_1 + \epsilon_{eta_1} \\
+\epsilon_{\eta_1} \sim N(0, \sigma_{eta_1})
+\end{align}
+```
+For simplicity, instead of $\beta_1$ regression, the covariance between $\eta_1$ and $x_1$ is estimated (meaning $\sigma_{eta_1}$ directly indicating the factor variance instead of residual variance).
+
+The measurement model is specified as:
+
+```{=tex}
+\begin{align}
+m_1 = \lambda_{1} \eta_1 + \epsilon_{m_1} \\
+m_2 = \lambda_{1} \eta_1 + \epsilon_{m_2} \\
+m_3 = \lambda_{1} \eta_1 + \epsilon_{m_3} \\
+\epsilon_{m} \sim N(0, \sigma_{m})
+\end{align}
+```
+Again, the case where m are binary items will be discussed later.
+
+The exogenous variable vector $(\eta_1, z, x )$ can be broke using Cholesky decomposition (see Eq 8 from KM 2000; I am not sure, but AC will be covariance matrix; KM might make a mistake).
+
+$$
+\begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} = 
+\begin{pmatrix}
+a_{11} & 0 & 0 \\
+a_{21} & a_{22} & 0 \\
+a_{31} & a_{32} & a_{32} \\
+\end{pmatrix}
+\begin{pmatrix}c_1 \\ c_2 \\ c_3 \end{pmatrix} = AC,
+$$
+
+where A is a lower triangle of Cholesky decomposition of the variance-covariance matrix of the exogenous variable vector (which will be represented by $\Phi$ = $AC$), and $c_1$ \~ $c_3$ are standardized normal variables, which are used to normalize the non-normal distribution. Specifically, in this case, there's only one latent interaction effects, c2 and c3 are constrained to zero, thus
+
+$$
+\begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} = 
+\begin{pmatrix}
+a_{11} & 0 & 0 \\
+a_{21} & a_{22} & 0 \\
+a_{31} & a_{32} & a_{32} \\
+\end{pmatrix}
+\begin{pmatrix}c_1 \\ 0 \\ 0 \end{pmatrix} = AC,
+$$
+
+Note that c1 is not directly estimable, so instead of c1, replaced with Hermite-Gaussian quadrature.
+
+To simplify,
+
+$$
+y = \alpha + \Gamma' AC + C'A'\Omega AC + \epsilon
+$$ \begin{align}
+\mathbf{m} = \Lambda \eta_1 + \epsilon_{m} \\
+\epsilon_{m} \sim N(0, diag(\sigma_{m}))
+\end{align}
+
+<!-- Cholesky decomposition of $\Phi$ = A -->
+
+<!-- $\Phi = Az$ -->
+
+<!-- $$\Psi = B' \Phi B + \Theta $$ -->
+
+## Model implied mean and covariance
+
+The model implied mean vectors and covariance below will follow multivariate normal distribution based on LMS specification
+
+The following equations come from Eq.18 \~ Eq.22 (KM 2000).
+
+First,
+
+```{=tex}
+\begin{align}
+\Lambda_x = \begin{pmatrix}
+\lambda & 0 & 0 \\ 
+\lambda & 0 & 0 \\ 
+\lambda & 0 & 0 \\ 
+0 & 1 & 0 \\ 
+0 & 0 & 1 
+\end{pmatrix} && 
+\Gamma = \begin{pmatrix}
+\omega \\ \tau_0 \\ \gamma 
+\end{pmatrix} && 
+\Omega = \begin{pmatrix} 0 & \tau_1 & 0 \\ 0 & 0 & 0  \\ 0 & 0 & 0  \\ \end{pmatrix} \\
+
+A =
+\begin{pmatrix}
+a_{11} & 0 & 0 \\
+a_{21} & a_{22} & 0 \\
+a_{31} & a_{32} & a_{32} \\
+\end{pmatrix}, && 
+C_1 = \begin{pmatrix}
+c_1 \\ 0 \\ 0 
+\end{pmatrix} &&
+I_{\text{block}} = \begin{pmatrix}
+0 & 0  \\
+0 & I_{n-k} \\
+\end{pmatrix} \\
+
+\Lambda_y = \begin{pmatrix}
+1
+\end{pmatrix} &&
+
+\mathbf{\kappa_{x}} = \begin{pmatrix}
+\nu_{m_1}  \\ 
+\nu_{m_2}  \\ 
+\nu_{m_3}  \\ 
+\nu_{z}  \\ 
+\nu_{x_1}  
+\end{pmatrix} &&
+
+\Theta = \begin{pmatrix}
+\sigma^2_{m_1} & 0 & 0 & 0 & 0\\ 
+0 & \sigma^2_{m_2} & 0 & 0 & 0 \\ 
+0 & 0 & \sigma^2_{m_3} & 0 & 0 \\ 
+0 & 0 & 0 & 0 & 0  \\ 
+0 & 0 & 0 & 0 & 0
+\end{pmatrix}
+
+
+\end{align}
+```
+$$
+\mathbf{\tau} = 
+\begin{pmatrix}
+\tau_{eta_1} \\
+\tau_{z} \\
+\tau_{x_1} \\
+\end{pmatrix}
+$$
+
+$$
+T = \Gamma A + C_1' A'\Omega A
+$$
+
+**Note.**
+
+-   $\nu_{z}$ and $\nu_{x_1}$ are fixed at the means of z and x1 (not estimating).
+
+-   $\tau$ is the mean of latent factors; For the observed variables, their mean will be fed to $\tau_z$ and $\tau_{x_1}$.
+
+-   $\sigma^2_{z}$ and $\sigma^2_{x_1}$ are zero; $\sigma_{zx}$ is zero; instead, $\Phi$ represents those parameters (but not estimated, because they are observed variables; no need to estimate them).
+
+-   n equals number of covariates including z (3 in this example; $\eta$, z, x1)
+
+-   k = number of interaction effects (1 in this example; $\tau_1$: effect between $\eta_1$ and z)
+
+-   $I_{\text{block}}$ in this example will be $\begin{pmatrix} 0 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{pmatrix}$.
+
+<!-- - $\kappa_{y}$ is the intercept of $y$, but is constrained to zero -->
+
+### Means of indicators of exogenous factors
+
+$$
+\mu_x(c_1) = \nu +
+\Lambda_x
+\mathbf{\tau}
+A
+C_1
+$$
+
+### Means of indicators of endogenous factor
+
+-   Here, we have one observed variable for endogenous variable;
+
+-   It is treated as a latent factor with a single variable; with the mean and variance of the indicator fixed to zero; ($\nu_y$ == 0)
+
+-   $(\mathbf{\tau} +A C_1)$ = $tAc$
+
+$$
+\mu_y(c_1) = \nu_y + \Lambda_y(\alpha + \Gamma (\mathbf{\tau} +A C_1) + (\mathbf{\tau} +A C_1)'\Omega (\mathbf{\tau} +A C_1) )
+$$
+
+### Means of indicators of exogenous factors
+
+$$
+\Sigma_{xx}(c_1) = 
+\Lambda_x A Ink A' \Lambda_x' + \Theta
+$$
+
+### Covariance matrix of exogenous indicators
+
+$$
+\Sigma_{xy}(c_1) = \Lambda_xA
+I_{\text{block}}
+T'
+$$
+
+### Covariance matrix of endogenous indicators
+
+-   Again, we have only observed variable for endogenous factor.
+-   $\theta_y$ is fixed to zero; instead $\Psi_{y}$
+
+$$ \Sigma\_{yy}(c1) = \Lambda*y( T I*{\text{block}} T')\Lambda\_y' +
+\Lambda*y*\Psi{y}\Lambda\_y' + \theta\_y
+$$
+
+
+The above model-implied $\mu$ and $\Sigma$ are fed into the multivariate normal density, $\phi$.
+
+## Estimation
+
+-   Following is the parameter matrix aligned with the above LMS specification.
+-   The `NA` element is the parameter that will be estimated.
+-   Note. Theta.d == $\Theta$, Theta.e == $\theta_y$
+
+```{r echo = F}
+mat <- inp_model$matrices$class1
+mat
+
+
+
+```
+
+
+With the random starting values,
+
+```{r echo = F}
+mod.filled$matrices$class1
+```
+
+From this, EM algorithm starts,
+
+## Compute E-step
+
+The k-dimensional integral of (15) can be approximated by numerical methods, for example, by application of Hermite-Gaussian quadrature formulas s for numerical integration (Isaacson & Keller, 1966).
+
+To apply Hermite-Gaussian quadrature formulas, the integration variable zl is substituted by
+
+$$
+u = 2^{-1/2}z_1
+$$
+
+The k-dimensional integral of (25) is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function $exp(-u^2)$ in the integrand by finite sums.
+
+The quadrature formula provides M weights w_j \<- probabiliyt 'p' in my code.
+
+m is quadrature points, and 16 here (larget should better approximate the distribution).
+
+```{r}
+# Calculate Hermite Quadrature <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+k <- 1 # Number of interaction effects
+quad <- quadrature(m, k)
+
+V <- quad$n
+w <- quad$w
+# Hermite Quadrature Ends <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+# Compute p  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+P <- NULL
+for (i in seq_along(w)) {
+  # i = 1
+  p.ij <- w[i] * mvtnorm::dmvnorm(dat, 
+                                  mean = MU_lms(mod.filled, V[i, ]),
+                                  sigma = SIGMA_lms(mod.filled, V[i, ]))
+  P <- cbind(P, p.ij, deparse.level = 0)
+}
+P <- P/rowSums(P)
+head(P) # N x m matrix where N is the number of individuals.
+# E-step Ends         <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+```
+
+-   `MU_lms` and `SIGMA_lms` compute the model-implied mean and variance shown above at every $C_1$ (refer to [this](https://github.com/sooyongl/customLMS/blob/main/source/customized_sampleStat.R))
+
+-   Finally, in this step, we can get mixture proportions, `P`, which will be used in M-step.
+
+
+```{r eval = F}
+  matrices$A <- t(chol(matrices$Phi))
+  if (k < n & k > 0) {
+    z.1 <- c(z, rep(0, n - k)) # Note: z.1 is C.1; the original notation is z, so I won't change it. 
+                               # in our notation, z.1 is C_1 vector. (C_1, 0, 0)
+                               # Again, n and k is the number of exogenous variables and the number of interaction effects.
+  }
+  
+  A.z <- matrices$A %*% z.1 # A.C 
+  
+```
+
+Inside `MU_lms` and `SIGMA_lms`, $Phi$ (covariance matrix of exogenous variables) are converted to $A$ and given $C_1$ vector; `A.C = A %*% c.1`
+
+
+## Compute M-step
+
+-   Below is computing the likelihood for M-step using mixture proportion (refer to [this](https://github.com/sooyongl/customLMS/blob/main/source/customized_Likelihood.R)).
+
+```{r}
+k <- 1
+quad <- quadrature(m, k)
+V <- quad$n # quadrature points
+
+res0 <- sapply(seq_len(nrow(V)), function(i) { # i = 1
+  lls <- sum(
+    mvtnorm::dmvnorm(dat,
+                     mean = MU_lms(model = mod.filled, z = V[i, ]),
+                     sigma = SIGMA_lms(model = mod.filled, z = V[i, ]),
+                     log = TRUE) * P[, i])
+  lls
+})
+res <- sum(res0)
+-res
+```
+
+-   The estimates maximizing the following likelihood will keep the starting values updated until the new likelihood is not any different from the previous likelihood (e.g., 0.001)
+
+
+## Cases for binary  indicators
+
+when m is binary items (like our cases), things get more complicated.
+
+
+Using latent response variable framework (Muthen & Asp, 2002), instead of $m$, $m^*$ is used for multivariate normal distribution with some more constraints. The relation between bianry indicators and other are estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case). 
+
+These correlations are used to compute the likelihood values. 
+
+$m^*$ will be discritized by the threshold estimates, with the valid link function (e.g., logit or probit). 
+
+
+Due to some complication to make estimator for categorical indicators, I stop here. But the general procedure is consistent with the continuous indicators.
+
+
+
+## Take away
+
+-   Although KM initially propose the LMS for the interaction effect between two latent variables, it is not necessarily required only to two latent factors. One of variables can be observed variable (and many empirical studies use this specifically, for non-uniform DIF when using MIMIC model for DIf detection).
+
+-   In terms of normality assumption of exogenous variables, if we use an observed variable, it doesn't matter.
+
+-   I believe that this situation is the same as a regression model with a dummy variable. We don't care about the noramlity in dummy variable.
+
+-   It is true even when we use multivariate normal distribution to estimate the model with dummy variable used as independent variables. See the below simulation results using `lavaan` which use multiavriate normal distribution to fit all the variables in the model (y, x, and dummy)
+
+#### Typical regression with dummy variable and its interaction
+
+```{r}
+
+sim_res <- lapply(1:100, function(x) {
+  dummy = rbinom(1000, 1, 0.5)
+  x = rnorm(1000)
+  y = 0.5*dummy + -0.3*x + 0.4*dummy*x + rnorm(1000, 0, 1)
+  
+  fit <- lm(y ~ dummy + x + dummy:x, data.frame(y, x, dummy))
+  round(coef(fit),3)
+})
+sim_res <- do.call("rbind", sim_res)
+colMeans(sim_res) # True : 0.5  -0.3   0.4
+```
+
+#### MVN estimation for the regression with dummy variable and its interaction
+
+-   Here, all the means, variances, and covariance among y, x, and dummy are estimated to fit the same regression model.
+
+-   Since multivariate normal distribution assume all variables are normal distribution, the dummy variable violate its assummption.
+
+-   Even though the dummy is binary, the estimates weren't affected by its non-normality.
+
+-   When the binary variable is used as independent variable, it is okay for the normality assumption.
+
+```{r}
+# It is the same when using multivariate normal distribution
+library(lavaan)
+
+sim_res <- lapply(1:100, function(x) {
+  
+  dummy = rbinom(1000, 1, 0.5)
+  x = rnorm(1000)
+  y = 0.5*dummy + -0.3*x + 0.4*dummy*x + rnorm(1000, 0, 1)
+  
+  fit <- lavaan::sem(
+    data = data.frame(y, x, dummy),
+    model = 'y ~ dummy + x + dummy:x
+
+            y ~~ y
+            dummy ~~ dummy
+            x ~~ x',
+    meanstructure = T, fixed.x = F
+    
+  )
+  est <- parameterestimates(fit) %>% 
+    filter(lhs == "y", op == "~") %>% pull(est)
+  names(est) <- c("dummy", "x", "dummy:x")
+  est
+})
+sim_res <- do.call("rbind", sim_res)
+colMeans(sim_res) # True : 0.5  -0.3   0.4
+
+```

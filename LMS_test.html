@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Test</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="LMS_test_files/libs/clipboard/clipboard.min.js"></script>
+<script src="LMS_test_files/libs/quarto-html/quarto.js"></script>
+<script src="LMS_test_files/libs/quarto-html/popper.min.js"></script>
+<script src="LMS_test_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="LMS_test_files/libs/quarto-html/anchor.min.js"></script>
+<link href="LMS_test_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="LMS_test_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="LMS_test_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="LMS_test_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="LMS_test_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Test</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-2_2fc699ba00f20a46ae8a8ea729547822">
+<style type="text/css">
+.two-columns {
+  display: flex;
+  justify-content: space-between;
+}
+.column {
+  width: 45%;
+}
+</style>
+</div>
+<p>I first apologize that I start this study with the limited knowledge. I just wantted the sutdy to focus on comparing the results between estimators, not explicating the procedure of LMS (because LMS is commonly used and many previous results confirm its validity for latent interaction effects). The following is my understanding of what and how LMS does in accordance to KM 2000 paper.</p>
+<p>If the following isn’t understandable and still doutful, I’m open to drop this study. I don’t think I can do much better.</p>
+<section id="lms-with-one-latent-factor-and-a-binary-obervsed-variable" class="level2">
+<h2 class="anchored" data-anchor-id="lms-with-one-latent-factor-and-a-binary-obervsed-variable">LMS with one latent factor and a binary obervsed variable</h2>
+<p>Although intial LMS considers the interaction effects between two latent variables, it can be readily generalized to the interaction between one latent factor and an observed variable. There is no limit for LMS specification with an observed variable.</p>
+<p>The binary variable like treatment assignments is treated as continous variable like in a typical regression model with dummy variable.</p>
+<p>Below is the estimation procedure with one latent variable (3 continuous indicators) and one binary variable (Z; like treatment status), and one covariate (x1). (Note: with binary indicators, things are a little bit different, I’ll elaborate on this later)</p>
+<p>This procedure follows Klein and Moosburger 2000, and the results are identical to Mplus.</p>
+<p>What I want to show here is that it is okay to treat the observed binary variable as continuous. Because it is “independent” variable</p>
+</section>
+<section id="lms-specification" class="level2">
+<h2 class="anchored" data-anchor-id="lms-specification">LMS specification</h2>
+<p>Our strcutrual model can be re-formulated as:</p>
+<p><span class="math display">\[
+y = \alpha +
+\begin{pmatrix} \omega &amp; \tau_0 &amp; \gamma_1  \\ \end{pmatrix}
+\begin{pmatrix} \eta_1 \\ z \\ x_1 \\ \end{pmatrix} +
+\begin{pmatrix} \eta_1 \\ z \\ x_1 \\ \end{pmatrix}^T
+\begin{pmatrix} 0 &amp; \tau_1 &amp; 0 \\ 0 &amp; 0 &amp; 0  \\ 0 &amp; 0 &amp; 0  \\ \end{pmatrix}
+\begin{pmatrix} \eta_1 \\ z \\ x_1 \\ \end{pmatrix} +
+\varepsilon
+\]</span></p>
+<span class="math display">\[\begin{align}
+\eta_1 = \beta_1x_1 + \epsilon_{eta_1} \\
+\epsilon_{\eta_1} \sim N(0, \sigma_{eta_1})
+\end{align}\]</span>
+<p>For simplicity, instead of <span class="math inline">\(\beta_1\)</span> regression, the covariance between <span class="math inline">\(\eta_1\)</span> and <span class="math inline">\(x_1\)</span> is estimated (meaning <span class="math inline">\(\sigma_{eta_1}\)</span> directly indicating the factor variance instead of residual variance).</p>
+<p>The measurement model is specified as:</p>
+<span class="math display">\[\begin{align}
+m_1 = \lambda_{1} \eta_1 + \epsilon_{m_1} \\
+m_2 = \lambda_{1} \eta_1 + \epsilon_{m_2} \\
+m_3 = \lambda_{1} \eta_1 + \epsilon_{m_3} \\
+\epsilon_{m} \sim N(0, \sigma_{m})
+\end{align}\]</span>
+<p>Again, the case where m are binary items will be discussed later.</p>
+<p>The exogenous variable vector <span class="math inline">\((\eta_1, z, x )\)</span> can be broke using Cholesky decomposition (see Eq 8 from KM 2000; I am not sure, but AC will be covariance matrix; KM might make a mistake).</p>
+<p><span class="math display">\[
+\begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} =
+\begin{pmatrix}
+a_{11} &amp; 0 &amp; 0 \\
+a_{21} &amp; a_{22} &amp; 0 \\
+a_{31} &amp; a_{32} &amp; a_{32} \\
+\end{pmatrix}
+\begin{pmatrix}c_1 \\ c_2 \\ c_3 \end{pmatrix} = AC,
+\]</span></p>
+<p>where A is a lower triangle of Cholesky decomposition of the variance-covariance matrix of the exogenous variable vector (which will be represented by <span class="math inline">\(\Phi\)</span> = <span class="math inline">\(AC\)</span>), and <span class="math inline">\(c_1\)</span> ~ <span class="math inline">\(c_3\)</span> are standardized normal variables, which are used to normalize the non-normal distribution. Specifically, in this case, there’s only one latent interaction effects, c2 and c3 are constrained to zero, thus</p>
+<p><span class="math display">\[
+\begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} =
+\begin{pmatrix}
+a_{11} &amp; 0 &amp; 0 \\
+a_{21} &amp; a_{22} &amp; 0 \\
+a_{31} &amp; a_{32} &amp; a_{32} \\
+\end{pmatrix}
+\begin{pmatrix}c_1 \\ 0 \\ 0 \end{pmatrix} = AC,
+\]</span></p>
+<p>Note that c1 is not directly estimable, so instead of c1, replaced with Hermite-Gaussian quadrature.</p>
+<p>To simplify,</p>
+<p><span class="math display">\[
+y = \alpha + \Gamma' AC + C'A'\Omega AC + \epsilon
+\]</span> <span class="math display">\[\begin{align}
+\mathbf{m} = \Lambda \eta_1 + \epsilon_{m} \\
+\epsilon_{m} \sim N(0, diag(\sigma_{m}))
+\end{align}\]</span></p>
+<!-- Cholesky decomposition of $\Phi$ = A -->
+<!-- $\Phi = Az$ -->
+<!-- $$\Psi = B' \Phi B + \Theta $$ -->
+</section>
+<section id="model-implied-mean-and-covariance" class="level2">
+<h2 class="anchored" data-anchor-id="model-implied-mean-and-covariance">Model implied mean and covariance</h2>
+<p>The model implied mean vectors and covariance below will follow multivariate normal distribution based on LMS specification</p>
+<p>The following equations come from Eq.18 ~ Eq.22 (KM 2000).</p>
+<p>First,</p>
+<span class="math display">\[\begin{align}
+\Lambda_x = \begin{pmatrix}
+\lambda &amp; 0 &amp; 0 \\
+\lambda &amp; 0 &amp; 0 \\
+\lambda &amp; 0 &amp; 0 \\
+0 &amp; 1 &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{pmatrix} &amp;&amp;
+\Gamma = \begin{pmatrix}
+\omega \\ \tau_0 \\ \gamma
+\end{pmatrix} &amp;&amp;
+\Omega = \begin{pmatrix} 0 &amp; \tau_1 &amp; 0 \\ 0 &amp; 0 &amp; 0  \\ 0 &amp; 0 &amp; 0  \\ \end{pmatrix} \\
+
+A =
+\begin{pmatrix}
+a_{11} &amp; 0 &amp; 0 \\
+a_{21} &amp; a_{22} &amp; 0 \\
+a_{31} &amp; a_{32} &amp; a_{32} \\
+\end{pmatrix}, &amp;&amp;
+C_1 = \begin{pmatrix}
+c_1 \\ 0 \\ 0
+\end{pmatrix} &amp;&amp;
+I_{\text{block}} = \begin{pmatrix}
+0 &amp; 0  \\
+0 &amp; I_{n-k} \\
+\end{pmatrix} \\
+
+\Lambda_y = \begin{pmatrix}
+1
+\end{pmatrix} &amp;&amp;
+
+\mathbf{\kappa_{x}} = \begin{pmatrix}
+\nu_{m_1}  \\
+\nu_{m_2}  \\
+\nu_{m_3}  \\
+\nu_{z}  \\
+\nu_{x_1}  
+\end{pmatrix} &amp;&amp;
+
+\Theta = \begin{pmatrix}
+\sigma^2_{m_1} &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; \sigma^2_{m_2} &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; \sigma^2_{m_3} &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0  \\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0
+\end{pmatrix}
+
+
+\end{align}\]</span>
+<p><span class="math display">\[
+\mathbf{\tau} =
+\begin{pmatrix}
+\tau_{eta_1} \\
+\tau_{z} \\
+\tau_{x_1} \\
+\end{pmatrix}
+\]</span></p>
+<p><span class="math display">\[
+T = \Gamma A + C_1' A'\Omega A
+\]</span></p>
+<p><strong>Note.</strong></p>
+<ul>
+<li><p><span class="math inline">\(\nu_{z}\)</span> and <span class="math inline">\(\nu_{x_1}\)</span> are fixed at the means of z and x1 (not estimating).</p></li>
+<li><p><span class="math inline">\(\tau\)</span> is the mean of latent factors; For the observed variables, their mean will be fed to <span class="math inline">\(\tau_z\)</span> and <span class="math inline">\(\tau_{x_1}\)</span>.</p></li>
+<li><p><span class="math inline">\(\sigma^2_{z}\)</span> and <span class="math inline">\(\sigma^2_{x_1}\)</span> are zero; <span class="math inline">\(\sigma_{zx}\)</span> is zero; instead, <span class="math inline">\(\Phi\)</span> represents those parameters (but not estimated, because they are observed variables; no need to estimate them).</p></li>
+<li><p>n equals number of covariates including z (3 in this example; <span class="math inline">\(\eta\)</span>, z, x1)</p></li>
+<li><p>k = number of interaction effects (1 in this example; <span class="math inline">\(\tau_1\)</span>: effect between <span class="math inline">\(\eta_1\)</span> and z)</p></li>
+<li><p><span class="math inline">\(I_{\text{block}}\)</span> in this example will be <span class="math inline">\(\begin{pmatrix} 0 &amp; 0 &amp; 0 \\ 0 &amp; 1 &amp; 0 \\ 0 &amp; 0 &amp; 1 \end{pmatrix}\)</span>.</p></li>
+</ul>
+<!-- - $\kappa_{y}$ is the intercept of $y$, but is constrained to zero -->
+<section id="means-of-indicators-of-exogenous-factors" class="level3">
+<h3 class="anchored" data-anchor-id="means-of-indicators-of-exogenous-factors">Means of indicators of exogenous factors</h3>
+<p><span class="math display">\[
+\mu_x(c_1) = \nu +
+\Lambda_x
+\mathbf{\tau}
+A
+C_1
+\]</span></p>
+</section>
+<section id="means-of-indicators-of-endogenous-factor" class="level3">
+<h3 class="anchored" data-anchor-id="means-of-indicators-of-endogenous-factor">Means of indicators of endogenous factor</h3>
+<ul>
+<li><p>Here, we have one observed variable for endogenous variable;</p></li>
+<li><p>It is treated as a latent factor with a single variable; with the mean and variance of the indicator fixed to zero; (<span class="math inline">\(\nu_y\)</span> == 0)</p></li>
+<li><p><span class="math inline">\((\mathbf{\tau} +A C_1)\)</span> = <span class="math inline">\(tAc\)</span></p></li>
+</ul>
+<p><span class="math display">\[
+\mu_y(c_1) = \nu_y + \Lambda_y(\alpha + \Gamma (\mathbf{\tau} +A C_1) + (\mathbf{\tau} +A C_1)'\Omega (\mathbf{\tau} +A C_1) )
+\]</span></p>
+</section>
+<section id="means-of-indicators-of-exogenous-factors-1" class="level3">
+<h3 class="anchored" data-anchor-id="means-of-indicators-of-exogenous-factors-1">Means of indicators of exogenous factors</h3>
+<p><span class="math display">\[
+\Sigma_{xx}(c_1) =
+\Lambda_x A Ink A' \Lambda_x' + \Theta
+\]</span></p>
+</section>
+<section id="covariance-matrix-of-exogenous-indicators" class="level3">
+<h3 class="anchored" data-anchor-id="covariance-matrix-of-exogenous-indicators">Covariance matrix of exogenous indicators</h3>
+<p><span class="math display">\[
+\Sigma_{xy}(c_1) = \Lambda_xA
+I_{\text{block}}
+T'
+\]</span></p>
+</section>
+<section id="covariance-matrix-of-endogenous-indicators" class="level3">
+<h3 class="anchored" data-anchor-id="covariance-matrix-of-endogenous-indicators">Covariance matrix of endogenous indicators</h3>
+<ul>
+<li>Again, we have only observed variable for endogenous factor.</li>
+<li><span class="math inline">\(\theta_y\)</span> is fixed to zero; instead <span class="math inline">\(\Psi_{y}\)</span></li>
+</ul>
+<p><span class="math display">\[ \Sigma\_{yy}(c1) = \Lambda*y( T I*{\text{block}} T')\Lambda\_y' +
+\Lambda*y*\Psi{y}\Lambda\_y' + \theta\_y
+\]</span></p>
+<p>The above model-implied <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\Sigma\)</span> are fed into the multivariate normal density, <span class="math inline">\(\phi\)</span>.</p>
+</section>
+</section>
+<section id="estimation" class="level2">
+<h2 class="anchored" data-anchor-id="estimation">Estimation</h2>
+<ul>
+<li>Following is the parameter matrix aligned with the above LMS specification.</li>
+<li>The <code>NA</code> element is the parameter that will be estimated.</li>
+<li>Note. Theta.d == <span class="math inline">\(\Theta\)</span>, Theta.e == <span class="math inline">\(\theta_y\)</span></li>
+</ul>
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-3_93401f342a6173f9a28ef0e221e0a500">
+<div class="cell-output cell-output-stdout">
+<pre><code>$Lambda.x
+     [,1] [,2] [,3]
+[1,]    1    0    0
+[2,]   NA    0    0
+[3,]   NA    0    0
+[4,]    0    1    0
+[5,]    0    0    1
+
+$Lambda.y
+     [,1]
+[1,]    1
+
+$Gamma
+     [,1] [,2] [,3]
+[1,]   NA   NA   NA
+
+$Beta
+     [,1]
+[1,]    1
+
+$Theta.d
+     [,1] [,2] [,3] [,4] [,5]
+[1,]   NA    0    0    0    0
+[2,]    0   NA    0    0    0
+[3,]    0    0   NA    0    0
+[4,]    0    0    0    0    0
+[5,]    0    0    0    0    0
+
+$Theta.e
+     [,1]
+[1,]    0
+
+$Psi
+     [,1]
+[1,]   NA
+
+$Phi
+     [,1]      [,2]      [,3]
+[1,]   NA        NA        NA
+[2,]   NA 0.4684861 0.3340587
+[3,]   NA 0.3340587 0.6771345
+
+$nu.x
+     [,1]
+[1,]    0
+[2,]   NA
+[3,]   NA
+[4,]    0
+[5,]    0
+
+$nu.y
+     [,1]
+[1,]    0
+
+$alpha
+     [,1]
+[1,]   NA
+
+$tau
+         [,1]
+[1,]       NA
+[2,] 3.367010
+[3,] 2.705332
+
+$Omega
+     [,1] [,2] [,3]
+[1,]    0   NA    0
+[2,]    0    0    0
+[3,]    0    0    0</code></pre>
+</div>
+</div>
+<p>With the random starting values,</p>
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-4_0d234dbc14758643b7982aedd26eb61a">
+<div class="cell-output cell-output-stdout">
+<pre><code>$Lambda.x
+     [,1] [,2] [,3]
+[1,]    1    0    0
+[2,]    1    0    0
+[3,]    1    0    0
+[4,]    0    1    0
+[5,]    0    0    1
+
+$Lambda.y
+     [,1]
+[1,]    1
+
+$Gamma
+     [,1] [,2] [,3]
+[1,]  0.2  0.1  0.1
+
+$Beta
+     [,1]
+[1,]    1
+
+$Theta.d
+     [,1] [,2] [,3] [,4] [,5]
+[1,]  0.1  0.0  0.0    0    0
+[2,]  0.0  0.1  0.0    0    0
+[3,]  0.0  0.0  0.1    0    0
+[4,]  0.0  0.0  0.0    0    0
+[5,]  0.0  0.0  0.0    0    0
+
+$Theta.e
+     [,1]
+[1,]    0
+
+$Psi
+     [,1]
+[1,]  0.1
+
+$Phi
+     [,1]      [,2]      [,3]
+[1,] 0.50 0.0800000 0.1000000
+[2,] 0.08 0.4684861 0.3340587
+[3,] 0.10 0.3340587 0.6771345
+
+$nu.x
+     [,1]
+[1,]  0.0
+[2,] -0.3
+[3,] -0.1
+[4,]  0.0
+[5,]  0.0
+
+$nu.y
+     [,1]
+[1,]    0
+
+$alpha
+     [,1]
+[1,]  0.2
+
+$tau
+         [,1]
+[1,] 2.500000
+[2,] 3.367010
+[3,] 2.705332
+
+$Omega
+     [,1]  [,2] [,3]
+[1,]    0 -0.02    0
+[2,]    0  0.00    0
+[3,]    0  0.00    0</code></pre>
+</div>
+</div>
+<p>From this, EM algorithm starts,</p>
+</section>
+<section id="compute-e-step" class="level2">
+<h2 class="anchored" data-anchor-id="compute-e-step">Compute E-step</h2>
+<p>The k-dimensional integral of (15) can be approximated by numerical methods, for example, by application of Hermite-Gaussian quadrature formulas s for numerical integration (Isaacson &amp; Keller, 1966).</p>
+<p>To apply Hermite-Gaussian quadrature formulas, the integration variable zl is substituted by</p>
+<p><span class="math display">\[
+u = 2^{-1/2}z_1
+\]</span></p>
+<p>The k-dimensional integral of (25) is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function <span class="math inline">\(exp(-u^2)\)</span> in the integrand by finite sums.</p>
+<p>The quadrature formula provides M weights w_j &lt;- probabiliyt ‘p’ in my code.</p>
+<p>m is quadrature points, and 16 here (larget should better approximate the distribution).</p>
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-5_dce8330f93e484aabaa27b81dd79c4ca">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate Hermite Quadrature &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="co"># Number of interaction effects</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>quad <span class="ot">&lt;-</span> <span class="fu">quadrature</span>(m, k)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>V <span class="ot">&lt;-</span> quad<span class="sc">$</span>n</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>w <span class="ot">&lt;-</span> quad<span class="sc">$</span>w</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Hermite Quadrature Ends &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute p  &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(w)) {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># i = 1</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  p.ij <span class="ot">&lt;-</span> w[i] <span class="sc">*</span> mvtnorm<span class="sc">::</span><span class="fu">dmvnorm</span>(dat, </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">mean =</span> <span class="fu">MU_lms</span>(mod.filled, V[i, ]),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">sigma =</span> <span class="fu">SIGMA_lms</span>(mod.filled, V[i, ]))</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  P <span class="ot">&lt;-</span> <span class="fu">cbind</span>(P, p.ij, <span class="at">deparse.level =</span> <span class="dv">0</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> P<span class="sc">/</span><span class="fu">rowSums</span>(P)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(P) <span class="co"># N x m matrix where N is the number of individuals.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           [,1]          [,2]          [,3]         [,4]         [,5]
+1 9.656674e-225 1.405805e-164 4.980499e-121 3.431357e-87 2.126209e-60
+2 3.649252e-192 7.194880e-137  1.938447e-97 2.344180e-67 4.169363e-44
+3  1.358061e-90  3.818773e-54  1.188354e-30 4.281936e-15 1.538953e-05
+4 2.416557e-196 1.908844e-140 1.710262e-100 6.322758e-70 3.288108e-46
+5 3.890274e-103  5.610389e-64  3.445157e-38 1.543593e-20 5.263049e-09
+6 2.539572e-138  3.405884e-92  1.639060e-60 1.733448e-37 6.884457e-21
+          [,6]         [,7]         [,8]         [,9]        [,10]        [,11]
+1 2.661035e-39 3.926916e-23 1.898847e-11 5.142887e-04 9.127963e-01 8.668921e-02
+2 2.037303e-26 1.418423e-13 3.582964e-05 5.217363e-01 4.782069e-01 2.092980e-05
+3 5.047003e-01 4.952579e-01 2.640112e-05 9.156394e-14 1.728006e-26 1.013767e-43
+4 4.590538e-28 9.050399e-15 6.486654e-06 2.711422e-01 7.287547e-01 9.659082e-05
+5 1.383788e-02 9.825707e-01 3.591385e-03 8.429653e-10 1.104595e-20 4.810955e-36
+6 1.354569e-09 5.478178e-03 9.836602e-01 1.086157e-02 7.076682e-09 1.799135e-19
+         [,12]        [,13]         [,14]         [,15]         [,16]
+1 2.364017e-07 5.452623e-18  1.102368e-34  2.053408e-59  2.607453e-97
+2 2.148751e-14 1.351726e-28  4.477028e-49  5.777283e-78 8.689432e-121
+3 6.461955e-66 7.363670e-94 6.269661e-129 7.654619e-174 1.232720e-235
+4 3.144132e-13 6.693307e-27  8.255807e-47  4.625907e-75 4.089638e-117
+5 2.558335e-56 2.924575e-82 3.338819e-115 8.906998e-158 8.517063e-217
+6 7.437554e-35 1.044751e-55  3.026167e-83 6.975278e-120 7.136393e-172</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># E-step Ends         &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li><p><code>MU_lms</code> and <code>SIGMA_lms</code> compute the model-implied mean and variance shown above at every <span class="math inline">\(C_1\)</span> (refer to <a href="https://github.com/sooyongl/customLMS/blob/main/source/customized_sampleStat.R">this</a>)</p></li>
+<li><p>Finally, in this step, we can get mixture proportions, <code>P</code>, which will be used in M-step.</p></li>
+</ul>
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-6_f31e8a7a0ae4eea7066be5d4f89ca670">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  matrices<span class="sc">$</span>A <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">chol</span>(matrices<span class="sc">$</span>Phi))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (k <span class="sc">&lt;</span> n <span class="sc">&amp;</span> k <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    z<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">c</span>(z, <span class="fu">rep</span>(<span class="dv">0</span>, n <span class="sc">-</span> k)) <span class="co"># Note: z.1 is C.1; the original notation is z, so I won't change it. </span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                               <span class="co"># in our notation, z.1 is C_1 vector. (C_1, 0, 0)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                               <span class="co"># Again, n and k is the number of exogenous variables and the number of interaction effects.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  A.z <span class="ot">&lt;-</span> matrices<span class="sc">$</span>A <span class="sc">%*%</span> z<span class="fl">.1</span> <span class="co"># A.C </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Inside <code>MU_lms</code> and <code>SIGMA_lms</code>, <span class="math inline">\(Phi\)</span> (covariance matrix of exogenous variables) are converted to <span class="math inline">\(A\)</span> and given <span class="math inline">\(C_1\)</span> vector; <code>A.C = A %*% c.1</code></p>
+</section>
+<section id="compute-m-step" class="level2">
+<h2 class="anchored" data-anchor-id="compute-m-step">Compute M-step</h2>
+<ul>
+<li>Below is computing the likelihood for M-step using mixture proportion (refer to <a href="https://github.com/sooyongl/customLMS/blob/main/source/customized_Likelihood.R">this</a>).</li>
+</ul>
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-7_6f9e43005f5b369dbb09b01ef7eab8de">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>quad <span class="ot">&lt;-</span> <span class="fu">quadrature</span>(m, k)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>V <span class="ot">&lt;-</span> quad<span class="sc">$</span>n <span class="co"># quadrature points</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>res0 <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(V)), <span class="cf">function</span>(i) { <span class="co"># i = 1</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  lls <span class="ot">&lt;-</span> <span class="fu">sum</span>(</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    mvtnorm<span class="sc">::</span><span class="fu">dmvnorm</span>(dat,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">mean =</span> <span class="fu">MU_lms</span>(<span class="at">model =</span> mod.filled, <span class="at">z =</span> V[i, ]),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">sigma =</span> <span class="fu">SIGMA_lms</span>(<span class="at">model =</span> mod.filled, <span class="at">z =</span> V[i, ]),</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">log =</span> <span class="cn">TRUE</span>) <span class="sc">*</span> P[, i])</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  lls</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">sum</span>(res0)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span>res</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3996.612</code></pre>
+</div>
+</div>
+<ul>
+<li>The estimates maximizing the following likelihood will keep the starting values updated until the new likelihood is not any different from the previous likelihood (e.g., 0.001)</li>
+</ul>
+</section>
+<section id="cases-for-binary-indicators" class="level2">
+<h2 class="anchored" data-anchor-id="cases-for-binary-indicators">Cases for binary indicators</h2>
+<p>when m is binary items (like our cases), things get more complicated.</p>
+<p>Using latent response variable framework (Muthen &amp; Asp, 2002), instead of <span class="math inline">\(m\)</span>, <span class="math inline">\(m^*\)</span> is used for multivariate normal distribution with some more constraints. The relation between bianry indicators and other are estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case).</p>
+<p>These correlations are used to compute the likelihood values.</p>
+<p><span class="math inline">\(m^*\)</span> will be discritized by the threshold estimates, with the valid link function (e.g., logit or probit).</p>
+<p>Due to some complication to make estimator for categorical indicators, I stop here. But the general procedure is consistent with the continuous indicators.</p>
+</section>
+<section id="take-away" class="level2">
+<h2 class="anchored" data-anchor-id="take-away">Take away</h2>
+<ul>
+<li><p>Although KM initially propose the LMS for the interaction effect between two latent variables, it is not necessarily required only to two latent factors. One of variables can be observed variable (and many empirical studies use this specifically, for non-uniform DIF when using MIMIC model for DIf detection).</p></li>
+<li><p>In terms of normality assumption of exogenous variables, if we use an observed variable, it doesn’t matter.</p></li>
+<li><p>I believe that this situation is the same as a regression model with a dummy variable. We don’t care about the noramlity in dummy variable.</p></li>
+<li><p>It is true even when we use multivariate normal distribution to estimate the model with dummy variable used as independent variables. See the below simulation results using <code>lavaan</code> which use multiavriate normal distribution to fit all the variables in the model (y, x, and dummy)</p></li>
+</ul>
+<section id="typical-regression-with-dummy-variable-and-its-interaction" class="level4">
+<h4 class="anchored" data-anchor-id="typical-regression-with-dummy-variable-and-its-interaction">Typical regression with dummy variable and its interaction</h4>
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-8_1ce21d17494857f2ef4308feaf8935d7">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>sim_res <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="cf">function</span>(x) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  dummy <span class="ot">=</span> <span class="fu">rbinom</span>(<span class="dv">1000</span>, <span class="dv">1</span>, <span class="fl">0.5</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">=</span> <span class="fu">rnorm</span>(<span class="dv">1000</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">=</span> <span class="fl">0.5</span><span class="sc">*</span>dummy <span class="sc">+</span> <span class="sc">-</span><span class="fl">0.3</span><span class="sc">*</span>x <span class="sc">+</span> <span class="fl">0.4</span><span class="sc">*</span>dummy<span class="sc">*</span>x <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">1000</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> dummy <span class="sc">+</span> x <span class="sc">+</span> dummy<span class="sc">:</span>x, <span class="fu">data.frame</span>(y, x, dummy))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="fu">coef</span>(fit),<span class="dv">3</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>sim_res <span class="ot">&lt;-</span> <span class="fu">do.call</span>(<span class="st">"rbind"</span>, sim_res)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">colMeans</span>(sim_res) <span class="co"># True : 0.5  -0.3   0.4</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(Intercept)       dummy           x     dummy:x 
+    0.00111     0.49657    -0.29518     0.39730 </code></pre>
+</div>
+</div>
+</section>
+<section id="mvn-estimation-for-the-regression-with-dummy-variable-and-its-interaction" class="level4">
+<h4 class="anchored" data-anchor-id="mvn-estimation-for-the-regression-with-dummy-variable-and-its-interaction">MVN estimation for the regression with dummy variable and its interaction</h4>
+<ul>
+<li><p>Here, all the means, variances, and covariance among y, x, and dummy are estimated to fit the same regression model.</p></li>
+<li><p>Since multivariate normal distribution assume all variables are normal distribution, the dummy variable violate its assummption.</p></li>
+<li><p>Even though the dummy is binary, the estimates weren’t affected by its non-normality.</p></li>
+<li><p>When the binary variable is used as independent variable, it is okay for the normality assumption.</p></li>
+</ul>
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-9_cb8638e069cca9372166b772cfa0e8af">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># It is the same when using multivariate normal distribution</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lavaan)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>sim_res <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="cf">function</span>(x) {</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  dummy <span class="ot">=</span> <span class="fu">rbinom</span>(<span class="dv">1000</span>, <span class="dv">1</span>, <span class="fl">0.5</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">=</span> <span class="fu">rnorm</span>(<span class="dv">1000</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">=</span> <span class="fl">0.5</span><span class="sc">*</span>dummy <span class="sc">+</span> <span class="sc">-</span><span class="fl">0.3</span><span class="sc">*</span>x <span class="sc">+</span> <span class="fl">0.4</span><span class="sc">*</span>dummy<span class="sc">*</span>x <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">1000</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> lavaan<span class="sc">::</span><span class="fu">sem</span>(</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">data.frame</span>(y, x, dummy),</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> <span class="st">'y ~ dummy + x + dummy:x</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="st">            y ~~ y</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="st">            dummy ~~ dummy</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="st">            x ~~ x'</span>,</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">meanstructure =</span> T, <span class="at">fixed.x =</span> F</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  est <span class="ot">&lt;-</span> <span class="fu">parameterestimates</span>(fit) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(lhs <span class="sc">==</span> <span class="st">"y"</span>, op <span class="sc">==</span> <span class="st">"~"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(est)</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(est) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"dummy"</span>, <span class="st">"x"</span>, <span class="st">"dummy:x"</span>)</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  est</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>sim_res <span class="ot">&lt;-</span> <span class="fu">do.call</span>(<span class="st">"rbind"</span>, sim_res)</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="fu">colMeans</span>(sim_res) <span class="co"># True : 0.5  -0.3   0.4</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     dummy          x    dummy:x 
+ 0.4927713 -0.2928591  0.4000314 </code></pre>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
