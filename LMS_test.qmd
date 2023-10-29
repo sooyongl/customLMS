@@ -97,11 +97,85 @@ I first apologize that I start this study with the limited knowledge. I just wan
 
 If the following isn't understandable and still doutful, I'm open to drop this study. I don't think I can do much better.
 
+
+## Two major concerns
+
+1. LMS is based on the interaction between two latent variables
+
+-   Although KM initially propose the LMS for the interaction effect between two latent variables, it is not necessarily required only to two latent factors. One of variables can be observed variable (and many empirical studies use this specifically, for non-uniform DIF when using MIMIC model for DIf detection).
+
+2. LMS is based on the normality assumption, but the treatment assignment violates it.
+
+
+-   In terms of normality assumption of exogenous variables, if we use an observed variable, it doesn't matter.
+
+-   I believe that this situation is the same as a regression model with a dummy variable. We don't care about the noramlity in dummy variable.
+
+-   It is true even when we use multivariate normal distribution to estimate the model with dummy variable used as independent variables. See the below simulation results using `lavaan` which use multiavriate normal distribution to fit all the variables in the model (y, x, and dummy)
+
+
+#### Typical regression with dummy variable and its interaction
+
+```{r}
+
+sim_res <- lapply(1:100, function(x) {
+  dummy = rbinom(1000, 1, 0.5)
+  x = rnorm(1000)
+  y = 0.5*dummy + -0.3*x + 0.4*dummy*x + rnorm(1000, 0, 1)
+  
+  fit <- lm(y ~ dummy + x + dummy:x, data.frame(y, x, dummy))
+  round(coef(fit),3)
+})
+sim_res <- do.call("rbind", sim_res)
+colMeans(sim_res) # True : 0.5  -0.3   0.4
+```
+
+#### MVN estimation for the regression with dummy variable and its interaction
+
+-   Here, all the means, variances, and covariance among y, x, and dummy are estimated to fit the same regression model.
+
+-   Since multivariate normal distribution assume all variables are normal distribution, the dummy variable violate its assummption.
+
+-   Even though the dummy is binary, the estimates weren't affected by its non-normality.
+
+-   When the binary variable is used as independent variable, it is okay for the normality assumption.
+
+```{r}
+# It is the same when using multivariate normal distribution
+library(lavaan)
+
+sim_res <- lapply(1:100, function(x) {
+  
+  dummy = rbinom(1000, 1, 0.5)
+  x = rnorm(1000)
+  y = 0.5*dummy + -0.3*x + 0.4*dummy*x + rnorm(1000, 0, 1)
+  
+  fit <- lavaan::sem(
+    data = data.frame(y, x, dummy),
+    model = 'y ~ dummy + x + dummy:x
+
+            y ~~ y
+            dummy ~~ dummy
+            x ~~ x',
+    meanstructure = T, fixed.x = F
+    
+  )
+  est <- parameterestimates(fit) %>% 
+    filter(lhs == "y", op == "~") %>% pull(est)
+  names(est) <- c("dummy", "x", "dummy:x")
+  est
+})
+sim_res <- do.call("rbind", sim_res)
+colMeans(sim_res) # True : 0.5  -0.3   0.4
+
+```
+
+
 ## LMS with one latent factor and a binary obervsed variable
 
 Although intial LMS considers the interaction effects between two latent variables, it can be readily generalized to the interaction between one latent factor and an observed variable. There is no limit for LMS specification with an observed variable.
 
-The binary variable like treatment assignments is treated as continous variable like in a typical regression model with dummy variable.
+The binary variable like treatment assignments is treated as continuous variable like in a typical regression model with dummy variable.
 
 Below is the estimation procedure with one latent variable (3 continuous indicators) and one binary variable (Z; like treatment status), and one covariate (x1). (Note: with binary indicators, things are a little bit different, I'll elaborate on this later)
 
@@ -111,7 +185,7 @@ What I want to show here is that it is okay to treat the observed binary variabl
 
 ## LMS specification
 
-Our strcutrual model can be re-formulated as:
+Our structural model can be re-formulated as:
 
 $$
 y = \alpha +
@@ -298,7 +372,7 @@ $$
 
 $$
 \Sigma_{xx}(c_1) = 
-\Lambda_x A Ink A' \Lambda_x' + \Theta
+\Lambda_x A I_block A' \Lambda_x' + \Theta
 $$
 
 ### Covariance matrix of exogenous indicators
@@ -314,12 +388,18 @@ $$
 -   Again, we have only observed variable for endogenous factor.
 -   $\theta_y$ is fixed to zero; instead $\Psi_{y}$
 
-$$ \Sigma\_{yy}(c1) = \Lambda*y( T I*{\text{block}} T')\Lambda\_y' +
+$$ 
+\Sigma\_{yy}(c1) = \Lambda*y( T I*{\text{block}} T')\Lambda\_y' +
 \Lambda*y*\Psi{y}\Lambda\_y' + \theta\_y
 $$
 
 
-The above model-implied $\mu$ and $\Sigma$ are fed into the multivariate normal density, $\phi$.
+The above model-implied $\mu$ and $\Sigma$ are fed into the multivariate normal density, $\phi$. The density value for the realizaiton (x, y) across k-dimensional real space $R^k$ is
+
+$$
+f(x, y) = \int_{R^k} \phi(c_1)\phi_{\mu(c_1),\Sigma(c_1)} (x,y)  \,dc_1
+$$
+
 
 ## Estimation
 
@@ -330,9 +410,6 @@ The above model-implied $\mu$ and $\Sigma$ are fed into the multivariate normal 
 ```{r echo = F}
 mat <- inp_model$matrices$class1
 mat
-
-
-
 ```
 
 
@@ -344,38 +421,73 @@ mod.filled$matrices$class1
 
 From this, EM algorithm starts,
 
-## Compute E-step
 
-The k-dimensional integral of (15) can be approximated by numerical methods, for example, by application of Hermite-Gaussian quadrature formulas s for numerical integration (Isaacson & Keller, 1966).
+Because of the nonlinear relationship mentioned above, the integral of the mixture density
 
-To apply Hermite-Gaussian quadrature formulas, the integration variable zl is substituted by
+The m-dimensional integral above can be approximated by numerical methods, for example, by application of Hermite-Gaussian quadrature formulas s for numerical integration (Isaacson & Keller, 1966).
+
+To apply Hermite-Gaussian quadrature formulas, the integration variable $c_1$ is substituted by
 
 $$
-u = 2^{-1/2}z_1
+u = 2^{-1/2}c_1
 $$
 
-The k-dimensional integral of (25) is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function $exp(-u^2)$ in the integrand by finite sums.
+The m-dimensional integral above is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function $exp(-u^2)$ in the integrand by finite sums.
 
-The quadrature formula provides M weights w_j \<- probabiliyt 'p' in my code.
 
-m is quadrature points, and 16 here (larget should better approximate the distribution).
+The quadrature formula provides M weights w_j \<- probability 'p' in my code.
+
+m is quadrature points, and 16 here (larger should better approximate the distribution).
+
+$$
+f(x, y) = \int_{R^k} \pi^{-m/2}exp(-u'u)\phi_{\mu(2^{-1/2}c_1),\Sigma(2^{-1/2}c_1)} (x,y)  \,du
+$$
+
+$u = 2^{-1/2}c_1$ =
+
 
 ```{r}
+
 # Calculate Hermite Quadrature <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 k <- 1 # Number of interaction effects
 quad <- quadrature(m, k)
 
-V <- quad$n
+u <- quad$n
+u
+```
+
+$w=\pi^{-m/2}exp(-u'u)$
+
+```{r}
 w <- quad$w
 # Hermite Quadrature Ends <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+w
+```
+
+
+$$
+f(x, y) \approx \sum_{j=1}^{M} w_j\phi_{\mu_u,\Sigma_u} (x,y)
+$$
+
+## Compute E-step
+
+$$
+p^{(r)}(j=j|x_i, y_i) = \frac{w_j\phi(x,y)}{f(x_i, y_i)}
+$$
+
+- matrix $P^{(r)}$ contains the posterior probabilities for the mixture components j given the i-th row of the data matrix
+
+-   Finally, in this step, we can get mixture proportions, `P`, which will be used in M-step.
+
+```{r}
 
 # Compute p  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 P <- NULL
 for (i in seq_along(w)) {
   # i = 1
   p.ij <- w[i] * mvtnorm::dmvnorm(dat, 
-                                  mean = MU_lms(mod.filled, V[i, ]),
-                                  sigma = SIGMA_lms(mod.filled, V[i, ]))
+                                  mean = MU_lms(mod.filled, u[i, ]),
+                                  sigma = SIGMA_lms(mod.filled, u[i, ]))
   P <- cbind(P, p.ij, deparse.level = 0)
 }
 P <- P/rowSums(P)
@@ -383,13 +495,14 @@ head(P) # N x m matrix where N is the number of individuals.
 # E-step Ends         <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 ```
 
--   `MU_lms` and `SIGMA_lms` compute the model-implied mean and variance shown above at every $C_1$ (refer to [this](https://github.com/sooyongl/customLMS/blob/main/source/customized_sampleStat.R))
-
--   Finally, in this step, we can get mixture proportions, `P`, which will be used in M-step.
+-   `MU_lms` and `SIGMA_lms` compute the model-implied mean and variance shown above at every $C_1$ (or $u$) (refer to [this](https://github.com/sooyongl/customLMS/blob/main/source/customized_sampleStat.R))
 
 
 ```{r eval = F}
+
+  matrices <- mod.filled$matrices$class1
   matrices$A <- t(chol(matrices$Phi))
+  n <- nrow(matrices$A) # Number of covariates
   if (k < n & k > 0) {
     z.1 <- c(z, rep(0, n - k)) # Note: z.1 is C.1; the original notation is z, so I won't change it. 
                                # in our notation, z.1 is C_1 vector. (C_1, 0, 0)
@@ -407,6 +520,11 @@ Inside `MU_lms` and `SIGMA_lms`, $Phi$ (covariance matrix of exogenous variables
 
 -   Below is computing the likelihood for M-step using mixture proportion (refer to [this](https://github.com/sooyongl/customLMS/blob/main/source/customized_Likelihood.R)).
 
+
+$$
+\theta^{(3)} = arg \max_\theta\{\sum_{i=1}^N \sum_{j=1}^{M} p^{(r)}(j=j|x_i,y_i)ln\phi_{\mu_{c_1},\Sigma_{c_1}})(x_i, y_i)\}
+$$
+
 ```{r}
 k <- 1
 quad <- quadrature(m, k)
@@ -414,10 +532,11 @@ V <- quad$n # quadrature points
 
 res0 <- sapply(seq_len(nrow(V)), function(i) { # i = 1
   lls <- sum(
+    P[, i] *
     mvtnorm::dmvnorm(dat,
                      mean = MU_lms(model = mod.filled, z = V[i, ]),
                      sigma = SIGMA_lms(model = mod.filled, z = V[i, ]),
-                     log = TRUE) * P[, i])
+                     log = TRUE) )
   lls
 })
 res <- sum(res0)
@@ -446,65 +565,3 @@ Due to some complication to make estimator for categorical indicators, I stop he
 ## Take away
 
 -   Although KM initially propose the LMS for the interaction effect between two latent variables, it is not necessarily required only to two latent factors. One of variables can be observed variable (and many empirical studies use this specifically, for non-uniform DIF when using MIMIC model for DIf detection).
-
--   In terms of normality assumption of exogenous variables, if we use an observed variable, it doesn't matter.
-
--   I believe that this situation is the same as a regression model with a dummy variable. We don't care about the noramlity in dummy variable.
-
--   It is true even when we use multivariate normal distribution to estimate the model with dummy variable used as independent variables. See the below simulation results using `lavaan` which use multiavriate normal distribution to fit all the variables in the model (y, x, and dummy)
-
-#### Typical regression with dummy variable and its interaction
-
-```{r}
-
-sim_res <- lapply(1:100, function(x) {
-  dummy = rbinom(1000, 1, 0.5)
-  x = rnorm(1000)
-  y = 0.5*dummy + -0.3*x + 0.4*dummy*x + rnorm(1000, 0, 1)
-  
-  fit <- lm(y ~ dummy + x + dummy:x, data.frame(y, x, dummy))
-  round(coef(fit),3)
-})
-sim_res <- do.call("rbind", sim_res)
-colMeans(sim_res) # True : 0.5  -0.3   0.4
-```
-
-#### MVN estimation for the regression with dummy variable and its interaction
-
--   Here, all the means, variances, and covariance among y, x, and dummy are estimated to fit the same regression model.
-
--   Since multivariate normal distribution assume all variables are normal distribution, the dummy variable violate its assummption.
-
--   Even though the dummy is binary, the estimates weren't affected by its non-normality.
-
--   When the binary variable is used as independent variable, it is okay for the normality assumption.
-
-```{r}
-# It is the same when using multivariate normal distribution
-library(lavaan)
-
-sim_res <- lapply(1:100, function(x) {
-  
-  dummy = rbinom(1000, 1, 0.5)
-  x = rnorm(1000)
-  y = 0.5*dummy + -0.3*x + 0.4*dummy*x + rnorm(1000, 0, 1)
-  
-  fit <- lavaan::sem(
-    data = data.frame(y, x, dummy),
-    model = 'y ~ dummy + x + dummy:x
-
-            y ~~ y
-            dummy ~~ dummy
-            x ~~ x',
-    meanstructure = T, fixed.x = F
-    
-  )
-  est <- parameterestimates(fit) %>% 
-    filter(lhs == "y", op == "~") %>% pull(est)
-  names(est) <- c("dummy", "x", "dummy:x")
-  est
-})
-sim_res <- do.call("rbind", sim_res)
-colMeans(sim_res) # True : 0.5  -0.3   0.4
-
-```
