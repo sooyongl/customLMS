@@ -1,13 +1,11 @@
 ---
-title: "Test"
+title: ""
 format: html
 execute:
   cache: true
 ---
 
 ```{r echo = FALSE, include=F}
-
-
 # rm(list = ls())
 for(i in c("source/utils.R",
            "source/customized_sampleStat.R",
@@ -93,26 +91,27 @@ mod.filled <- fill_model(model = model, parameters = parameters)
 ```
 
 
-I first apologize that I start this study with the limited knowledge. I just wantted the sutdy to focus on comparing the results between estimators, not explicating the procedure of LMS (because LMS is commonly used and many previous results confirm its validity for latent interaction effects). The following is my understanding of what and how LMS does in accordance to KM 2000 paper.
-
-If the following isn't understandable and still doutful, I'm open to drop this study. I don't think I can do much better.
-
+First, I'd like to answer two major concerns we discussed last week.
 
 ## Two major concerns
 
 1. LMS is based on the interaction between two latent variables
 
--   Although KM initially propose the LMS for the interaction effect between two latent variables, it is not necessarily required only to two latent factors. One of variables can be observed variable (and many empirical studies use this specifically, for non-uniform DIF when using MIMIC model for DIf detection).
+- While KM initially introduced the LMS to address the interaction effect between two latent variables, it isn't strictly limited to two latent factors. One of these variables can indeed be an observed one. This is evident as many empirical studies (and simulation studies as well) specifically employ this method for non-uniform DIF, especially when using the MIMIC model for DIF detection.
+
+- So, I believe that using LMS for FLPS scenarios makes sense. 
 
 2. LMS is based on the normality assumption, but the treatment assignment violates it.
 
+-   When the normality assumption in LMS is violated, it causes problems. And it is confirmed by previous research.
 
--   In terms of normality assumption of exogenous variables, if we use an observed variable, it doesn't matter.
+- But, things get different for the latent interaction between an latent variable and an observed variable (but the observed variable isn't normal like a binary case).
 
--   I believe that this situation is the same as a regression model with a dummy variable. We don't care about the noramlity in dummy variable.
+-   I don't believe that the normality in observed variables is not necessary for LMS, because it is used as exogenous variables.
 
--   It is true even when we use multivariate normal distribution to estimate the model with dummy variable used as independent variables. See the below simulation results using `lavaan` which use multiavriate normal distribution to fit all the variables in the model (y, x, and dummy)
+-   I believe that this situation is the same as a regression model with a dummy variable, where the normality of the dummy variable isn't typically a concern.
 
+- Below is the regression model with two predictors; one is continuous and the other one is binary. When simulating 100 times, the interaction effects and other coefficients are not biased.
 
 #### Typical regression with dummy variable and its interaction
 
@@ -130,15 +129,16 @@ sim_res <- do.call("rbind", sim_res)
 colMeans(sim_res) # True : 0.5  -0.3   0.4
 ```
 
+
 #### MVN estimation for the regression with dummy variable and its interaction
 
--   Here, all the means, variances, and covariance among y, x, and dummy are estimated to fit the same regression model.
+-   This holds true even when employing a multivariate normal distribution to estimate a model where a dummy variable serves as one of the independent variables. This is demonstrated in the simulation results below, which were obtained using `lavaan` The software uses a multivariate normal distribution to fit all the variables in the model, including y, x, and the dummy variable.
 
--   Since multivariate normal distribution assume all variables are normal distribution, the dummy variable violate its assummption.
+-   Multivariate normal distribution assumes that all variables follow a normal distribution; however, a dummy variable inherently violates this assumption.
 
--   Even though the dummy is binary, the estimates weren't affected by its non-normality.
+-   Despite the dummy variable not following a normal distribution, its non-normality does not impact the estimates as below.
 
--   When the binary variable is used as independent variable, it is okay for the normality assumption.
+-   Thus, using a binary variable as an independent variable is still consistent with the normality assumption.
 
 ```{r}
 # It is the same when using multivariate normal distribution
@@ -170,18 +170,27 @@ colMeans(sim_res) # True : 0.5  -0.3   0.4
 
 ```
 
+- The same unbiased results are also supported by our simulation studies. 
+
+- Numerous other studies specifically utilize these interaction effects for non-uniform DIF detection.
+
+- I've also conducted a quick simulation on this matter, and the results appear unbiased. Please refer to [the Mplus output](https://github.com/sooyongl/customLMS/blob/main/monte_binary.out) for details.
+
 
 ## LMS with one latent factor and a binary obervsed variable
 
-Although intial LMS considers the interaction effects between two latent variables, it can be readily generalized to the interaction between one latent factor and an observed variable. There is no limit for LMS specification with an observed variable.
+Based on the KM 2000 paper, the following is my understanding of of how the LMS method addresses the latent interaction effect between a latent variable and an observed variable, irrespective of the type of observed variables.
 
-The binary variable like treatment assignments is treated as continuous variable like in a typical regression model with dummy variable.
+While the original design of LMS focuses on interaction effects between two latent variables, this approach can seamlessly be extended to encompass interactions between one latent factor and an observed variable. Essentially, LMS does not impose constraints when incorporating an observed variable.
 
-Below is the estimation procedure with one latent variable (3 continuous indicators) and one binary variable (Z; like treatment status), and one covariate (x1). (Note: with binary indicators, things are a little bit different, I'll elaborate on this later)
+Binary variables like treatment assignments are treated as continuous variable like in a typical regression model with dummy variable.
+
+For illustration, consider an estimation procedure that involves one latent variable (represented by 3 continuous indicators), a binary variable (Z; analogous to treatment status), and one covariate (x1). (Note: with binary indicators, things are a little bit different, I'll elaborate on this later)
 
 This procedure follows Klein and Moosburger 2000, and the results are identical to Mplus.
 
-What I want to show here is that it is okay to treat the observed binary variable as continuous. Because it is "independent" variable
+My central point here is to show that treating an observed binary variable as continuous is valid, given its role as an "independent" variable.
+
 
 ## LMS specification
 
@@ -199,8 +208,8 @@ $$
 
 ```{=tex}
 \begin{align}
-\eta_1 = \beta_1x_1 + \epsilon_{eta_1} \\
-\epsilon_{\eta_1} \sim N(0, \sigma_{eta_1})
+\eta_1 = \beta_1x_1 + \epsilon_{\eta_1} \\
+\epsilon_{\eta_1} \sim N(0, \sigma_{\eta_1})
 \end{align}
 ```
 For simplicity, instead of $\beta_1$ regression, the covariance between $\eta_1$ and $x_1$ is estimated (meaning $\sigma_{eta_1}$ directly indicating the factor variance instead of residual variance).
@@ -209,13 +218,13 @@ The measurement model is specified as:
 
 ```{=tex}
 \begin{align}
-m_1 = \lambda_{1} \eta_1 + \epsilon_{m_1} \\
-m_2 = \lambda_{1} \eta_1 + \epsilon_{m_2} \\
-m_3 = \lambda_{1} \eta_1 + \epsilon_{m_3} \\
-\epsilon_{m} \sim N(0, \sigma_{m})
+item_1 = \lambda_{1} \eta_1 + \epsilon_{item_1} \\
+item_2 = \lambda_{1} \eta_1 + \epsilon_{item_2} \\
+item_3 = \lambda_{1} \eta_1 + \epsilon_{item_3} \\
+\epsilon_{item} \sim N(0, \sigma_{item})
 \end{align}
 ```
-Again, the case where m are binary items will be discussed later.
+Again, the case where $item$ are binary items will be discussed later.
 
 The exogenous variable vector $(\eta_1, z, x )$ can be broke using Cholesky decomposition (see Eq 8 from KM 2000; I am not sure, but AC will be covariance matrix; KM might make a mistake).
 
@@ -229,7 +238,7 @@ a_{31} & a_{32} & a_{32} \\
 \begin{pmatrix}c_1 \\ c_2 \\ c_3 \end{pmatrix} = AC,
 $$
 
-where A is a lower triangle of Cholesky decomposition of the variance-covariance matrix of the exogenous variable vector (which will be represented by $\Phi$ = $AC$), and $c_1$ \~ $c_3$ are standardized normal variables, which are used to normalize the non-normal distribution. Specifically, in this case, there's only one latent interaction effects, c2 and c3 are constrained to zero, thus
+where A is a lower triangle of Cholesky decomposition of the variance-covariance matrix of the exogenous variable vector (which will be represented by $\Phi$ = $AC$), and $c_1$ \~ $c_3$ are standardized normal variables, which are used to normalize the non-normal distribution. Specifically, in this case, there's only one latent interaction effects, $c_2$ and $c_3$ are constrained to zero, thus
 
 $$
 \begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} = 
@@ -241,22 +250,19 @@ a_{31} & a_{32} & a_{32} \\
 \begin{pmatrix}c_1 \\ 0 \\ 0 \end{pmatrix} = AC,
 $$
 
-Note that c1 is not directly estimable, so instead of c1, replaced with Hermite-Gaussian quadrature.
+Note that $c_1$ cannot be directly estimated; thus, $c_1$ will be replaced with Hermite-Gaussian quadrature later in the procedure.
 
 To simplify,
 
 $$
 y = \alpha + \Gamma' AC + C'A'\Omega AC + \epsilon
-$$ \begin{align}
-\mathbf{m} = \Lambda \eta_1 + \epsilon_{m} \\
-\epsilon_{m} \sim N(0, diag(\sigma_{m}))
+$$ 
+
+\begin{align}
+\mathbf{item} = \Lambda \eta_1 + \epsilon_{item} \\
+\epsilon_{item} \sim N(0, diag(\sigma_{item}))
 \end{align}
 
-<!-- Cholesky decomposition of $\Phi$ = A -->
-
-<!-- $\Phi = Az$ -->
-
-<!-- $$\Psi = B' \Phi B + \Theta $$ -->
 
 ## Model implied mean and covariance
 
@@ -299,17 +305,17 @@ I_{\text{block}} = \begin{pmatrix}
 \end{pmatrix} &&
 
 \mathbf{\kappa_{x}} = \begin{pmatrix}
-\nu_{m_1}  \\ 
-\nu_{m_2}  \\ 
-\nu_{m_3}  \\ 
+\nu_{item_1}  \\ 
+\nu_{item_2}  \\ 
+\nu_{item_3}  \\ 
 \nu_{z}  \\ 
 \nu_{x_1}  
 \end{pmatrix} &&
 
 \Theta = \begin{pmatrix}
-\sigma^2_{m_1} & 0 & 0 & 0 & 0\\ 
-0 & \sigma^2_{m_2} & 0 & 0 & 0 \\ 
-0 & 0 & \sigma^2_{m_3} & 0 & 0 \\ 
+\sigma^2_{item_1} & 0 & 0 & 0 & 0\\ 
+0 & \sigma^2_{item_2} & 0 & 0 & 0 \\ 
+0 & 0 & \sigma^2_{item_3} & 0 & 0 \\ 
 0 & 0 & 0 & 0 & 0  \\ 
 0 & 0 & 0 & 0 & 0
 \end{pmatrix}
@@ -332,15 +338,15 @@ $$
 
 **Note.**
 
--   $\nu_{z}$ and $\nu_{x_1}$ are fixed at the means of z and x1 (not estimating).
+-   $\nu_{z}$ and $\nu_{x_1}$ are fixed at the means of $z$ and $x_1$ (no need for estimating).
 
 -   $\tau$ is the mean of latent factors; For the observed variables, their mean will be fed to $\tau_z$ and $\tau_{x_1}$.
 
 -   $\sigma^2_{z}$ and $\sigma^2_{x_1}$ are zero; $\sigma_{zx}$ is zero; instead, $\Phi$ represents those parameters (but not estimated, because they are observed variables; no need to estimate them).
 
--   n equals number of covariates including z (3 in this example; $\eta$, z, x1)
+-   $n$ equals number of covariates including z (3 in this example; $\eta$, z, x1)
 
--   k = number of interaction effects (1 in this example; $\tau_1$: effect between $\eta_1$ and z)
+-   $k$ = number of interaction effects (1 in this example; $\tau_1$: effect between $\eta_1$ and z)
 
 -   $I_{\text{block}}$ in this example will be $\begin{pmatrix} 0 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{pmatrix}$.
 
@@ -372,7 +378,7 @@ $$
 
 $$
 \Sigma_{xx}(c_1) = 
-\Lambda_x A I_block A' \Lambda_x' + \Theta
+\Lambda_x A I_{block} A' \Lambda_x' + \Theta
 $$
 
 ### Covariance matrix of exogenous indicators
@@ -389,7 +395,7 @@ $$
 -   $\theta_y$ is fixed to zero; instead $\Psi_{y}$
 
 $$ 
-\Sigma\_{yy}(c1) = \Lambda*y( T I*{\text{block}} T')\Lambda\_y' +
+\Sigma\_{yy}(c1) = \Lambda*y( T I_{\text{block}} T')\Lambda\_y' +
 \Lambda*y*\Psi{y}\Lambda\_y' + \theta\_y
 $$
 
@@ -522,7 +528,7 @@ Inside `MU_lms` and `SIGMA_lms`, $Phi$ (covariance matrix of exogenous variables
 
 
 $$
-\theta^{(3)} = arg \max_\theta\{\sum_{i=1}^N \sum_{j=1}^{M} p^{(r)}(j=j|x_i,y_i)ln\phi_{\mu_{c_1},\Sigma_{c_1}})(x_i, y_i)\}
+\theta^{(r)} = arg \max_\theta\{\sum_{i=1}^N \sum_{j=1}^{M} p^{(r)}(j=j|x_i,y_i)ln\phi_{\mu_{c_1},\Sigma_{c_1}})(x_i, y_i)\}
 $$
 
 ```{r}
@@ -548,20 +554,28 @@ res <- sum(res0)
 
 ## Cases for binary  indicators
 
-when m is binary items (like our cases), things get more complicated.
+For scenarios where $item$ is binary items (like our cases), things get more complicated.
 
 
-Using latent response variable framework (Muthen & Asp, 2002), instead of $m$, $m^*$ is used for multivariate normal distribution with some more constraints. The relation between bianry indicators and other are estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case). 
+Using latent response variable framework (Muthen & Asp, 2002), $item^*$ is used instead of $item$ for multivariate normal distribution with some more constraints (i.g., $E(item^*)=0$ and $V(item^*)=1$. The relationship between binary indicators and other variables is estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case). 
 
 These correlations are used to compute the likelihood values. 
 
-$m^*$ will be discritized by the threshold estimates, with the valid link function (e.g., logit or probit). 
+$item^*$ will be dichotomized by threshold estimates, with the appropriate link function (e.g., logit or probit). 
 
 
-Due to some complication to make estimator for categorical indicators, I stop here. But the general procedure is consistent with the continuous indicators.
+Due to some complication to make estimator for categorical indicators, I stop here. However the general procedure is consistent with the continuous indicators.
 
 
 
 ## Take away
 
--   Although KM initially propose the LMS for the interaction effect between two latent variables, it is not necessarily required only to two latent factors. One of variables can be observed variable (and many empirical studies use this specifically, for non-uniform DIF when using MIMIC model for DIf detection).
+- While the initial LMS concept by KM was centered around the interaction effect between two latent variables, it doesn't strictly bind to such a structure. The model can easily accommodate an observed variable in the mix. In fact, numerous empirical studies have adopted this approach, especially when detecting non-uniform DIF using the MIMIC model.
+
+- Again, I believe that using LMS for our FLPS scenario doesn't violate its assumption.
+
+- I hope that above could address all the concerns related to LMS.
+
+
+
+
