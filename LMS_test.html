@@ -95,16 +95,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>First, I’d like to answer two major concerns we discussed last week.</p>
 <section id="two-major-concerns" class="level2">
 <h2 class="anchored" data-anchor-id="two-major-concerns">Two major concerns</h2>
-<ol type="1">
-<li>LMS is based on the interaction between two latent variables</li>
-</ol>
+<p><strong>1. LMS is based on the interaction between two latent variables</strong></p>
 <ul>
 <li><p>While KM initially introduced the LMS to address the interaction effect between two latent variables, it isn’t strictly limited to two latent factors. One of these variables can indeed be an observed one. This is evident as many empirical studies (and simulation studies as well) specifically employ this method for non-uniform DIF, especially when using the MIMIC model for DIF detection.</p></li>
 <li><p>So, I believe that using LMS for FLPS scenarios makes sense.</p></li>
 </ul>
-<ol start="2" type="1">
-<li>LMS is based on the normality assumption, but the treatment assignment violates it.</li>
-</ol>
+<p><strong>2. LMS is based on the normality assumption, but the treatment assignment violates it</strong></p>
 <ul>
 <li><p>When the normality assumption in LMS is violated, it causes problems. And it is confirmed by previous research.</p></li>
 <li><p>But, things get different for the latent interaction between an latent variable and an observed variable (but the observed variable isn’t normal like a binary case).</p></li>
@@ -131,10 +127,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="mvn-estimation-for-the-regression-with-dummy-variable-and-its-interaction" class="level4">
-<h4 class="anchored" data-anchor-id="mvn-estimation-for-the-regression-with-dummy-variable-and-its-interaction">MVN estimation for the regression with dummy variable and its interaction</h4>
+<section id="mvn-estimator-for-the-regression-with-dummy-variable-and-its-interaction" class="level4">
+<h4 class="anchored" data-anchor-id="mvn-estimator-for-the-regression-with-dummy-variable-and-its-interaction">MVN estimator for the regression with dummy variable and its interaction</h4>
 <ul>
-<li><p>This holds true even when employing a multivariate normal distribution to estimate a model where a dummy variable serves as one of the independent variables. This is demonstrated in the simulation results below, which were obtained using <code>lavaan</code> The software uses a multivariate normal distribution to fit all the variables in the model, including y, x, and the dummy variable.</p></li>
+<li><p>This holds true even when employing a multivariate normal distribution to estimate a model where a dummy variable serves as one of the independent variables. This is demonstrated in the simulation results below, which were obtained using <code>lavaan</code> The package uses a multivariate normal distribution to fit all the variables in the model, including y, x, and the dummy variable.</p></li>
 <li><p>Multivariate normal distribution assumes that all variables follow a normal distribution; however, a dummy variable inherently violates this assumption.</p></li>
 <li><p>Despite the dummy variable not following a normal distribution, its non-normality does not impact the estimates as below.</p></li>
 <li><p>Thus, using a binary variable as an independent variable is still consistent with the normality assumption.</p></li>
@@ -174,7 +170,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><p>The same unbiased results are also supported by our simulation studies.</p></li>
 <li><p>Numerous other studies specifically utilize these interaction effects for non-uniform DIF detection.</p></li>
-<li><p>I’ve also conducted a quick simulation on this matter, and the results appear unbiased. Please refer to <a href="https://github.com/sooyongl/customLMS/blob/main/monte_binary.out">the Mplus output</a> for details.</p></li>
+<li><p>I’ve also conducted a quick simulation on this matter, and the results appear unbiased. Please refer to <a href="https://raw.githubusercontent.com/sooyongl/customLMS/main/monte_binary.out">the Mplus output</a> for details.</p></li>
 </ul>
 </section>
 </section>
@@ -203,16 +199,16 @@ y = \alpha +
 \eta_1 = \beta_1x_1 + \epsilon_{\eta_1} \\
 \epsilon_{\eta_1} \sim N(0, \sigma_{\eta_1})
 \end{align}\]</span>
-<p>For simplicity, instead of <span class="math inline">\(\beta_1\)</span> regression, the covariance between <span class="math inline">\(\eta_1\)</span> and <span class="math inline">\(x_1\)</span> is estimated (meaning <span class="math inline">\(\sigma_{eta_1}\)</span> directly indicating the factor variance instead of residual variance).</p>
+<p>For simplicity, instead of <span class="math inline">\(\beta_1\)</span> regression, the covariance between <span class="math inline">\(\eta_1\)</span> and <span class="math inline">\(x_1\)</span> is estimated (meaning <span class="math inline">\(\sigma_{\eta_1}\)</span> directly indicating the factor variance instead of residual variance).</p>
 <p>The measurement model is specified as:</p>
 <span class="math display">\[\begin{align}
 item_1 = \lambda_{1} \eta_1 + \epsilon_{item_1} \\
-item_2 = \lambda_{1} \eta_1 + \epsilon_{item_2} \\
-item_3 = \lambda_{1} \eta_1 + \epsilon_{item_3} \\
+item_2 = \lambda_{2} \eta_1 + \epsilon_{item_2} \\
+item_3 = \lambda_{3} \eta_1 + \epsilon_{item_3} \\
 \epsilon_{item} \sim N(0, \sigma_{item})
 \end{align}\]</span>
 <p>Again, the case where <span class="math inline">\(item\)</span> are binary items will be discussed later.</p>
-<p>The exogenous variable vector <span class="math inline">\((\eta_1, z, x )\)</span> can be broke using Cholesky decomposition (see Eq 8 from KM 2000; I am not sure, but AC will be covariance matrix; KM might make a mistake).</p>
+<p>The exogenous variable vector <span class="math inline">\((\eta_1, z, x )\)</span> can be decomposed using Cholesky decomposition (see Eq 8 from KM 2000; AC should be covariance matrix, but it was followed by KM 2000 notation).</p>
 <p><span class="math display">\[
 \begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} =
 \begin{pmatrix}
@@ -222,7 +218,7 @@ a_{31} &amp; a_{32} &amp; a_{32} \\
 \end{pmatrix}
 \begin{pmatrix}c_1 \\ c_2 \\ c_3 \end{pmatrix} = AC,
 \]</span></p>
-<p>where A is a lower triangle of Cholesky decomposition of the variance-covariance matrix of the exogenous variable vector (which will be represented by <span class="math inline">\(\Phi\)</span> = <span class="math inline">\(AC\)</span>), and <span class="math inline">\(c_1\)</span> ~ <span class="math inline">\(c_3\)</span> are standardized normal variables, which are used to normalize the non-normal distribution. Specifically, in this case, there’s only one latent interaction effects, <span class="math inline">\(c_2\)</span> and <span class="math inline">\(c_3\)</span> are constrained to zero, thus</p>
+<p>where A is a lower triangle of Cholesky decomposition of the variance-covariance matrix of the exogenous variable vector (which will be represented by <span class="math inline">\(\Phi\)</span> = <span class="math inline">\(AC\)</span>), and <span class="math inline">\(c_1\)</span> ~ <span class="math inline">\(c_3\)</span> are standardized normal variables, which are used to normalize the non-normal distribution. Specifically, in this case, there’s only one latent interaction effects, <span class="math inline">\(c_2\)</span> and <span class="math inline">\(c_3\)</span> are constrained to zero; thus</p>
 <p><span class="math display">\[
 \begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} =
 \begin{pmatrix}
@@ -232,7 +228,7 @@ a_{31} &amp; a_{32} &amp; a_{32} \\
 \end{pmatrix}
 \begin{pmatrix}c_1 \\ 0 \\ 0 \end{pmatrix} = AC,
 \]</span></p>
-<p>Note that <span class="math inline">\(c_1\)</span> cannot be directly estimated; thus, <span class="math inline">\(c_1\)</span> will be replaced with Hermite-Gaussian quadrature later in the procedure.</p>
+<p>Note that <span class="math inline">\(c_1\)</span> cannot be directly estimated; and, <span class="math inline">\(c_1\)</span> will be replaced with Hermite-Gaussian quadrature later in the procedure.</p>
 <p>To simplify,</p>
 <p><span class="math display">\[
 y = \alpha + \Gamma' AC + C'A'\Omega AC + \epsilon
@@ -244,14 +240,14 @@ y = \alpha + \Gamma' AC + C'A'\Omega AC + \epsilon
 </section>
 <section id="model-implied-mean-and-covariance" class="level2">
 <h2 class="anchored" data-anchor-id="model-implied-mean-and-covariance">Model implied mean and covariance</h2>
-<p>The model implied mean vectors and covariance below will follow multivariate normal distribution based on LMS specification</p>
+<p>The model implied mean vectors and covariance below will follow multivariate normal distribution based on LMS specification. These components will be used to multivariate normal density function to compute likelihood values.</p>
 <p>The following equations come from Eq.18 ~ Eq.22 (KM 2000).</p>
 <p>First,</p>
 <span class="math display">\[\begin{align}
 \Lambda_x = \begin{pmatrix}
-\lambda &amp; 0 &amp; 0 \\
-\lambda &amp; 0 &amp; 0 \\
-\lambda &amp; 0 &amp; 0 \\
+\lambda_1 &amp; 0 &amp; 0 \\
+\lambda_2 &amp; 0 &amp; 0 \\
+\lambda_3 &amp; 0 &amp; 0 \\
 0 &amp; 1 &amp; 0 \\
 0 &amp; 0 &amp; 1
 \end{pmatrix} &amp;&amp;
@@ -278,7 +274,7 @@ I_{\text{block}} = \begin{pmatrix}
 1
 \end{pmatrix} &amp;&amp;
 
-\mathbf{\kappa_{x}} = \begin{pmatrix}
+\mathbf{\nu_{x}} = \begin{pmatrix}
 \nu_{item_1}  \\
 \nu_{item_2}  \\
 \nu_{item_3}  \\
@@ -309,8 +305,8 @@ T = \Gamma A + C_1' A'\Omega A
 \]</span></p>
 <p><strong>Note.</strong></p>
 <ul>
-<li><p><span class="math inline">\(\nu_{z}\)</span> and <span class="math inline">\(\nu_{x_1}\)</span> are fixed at the means of <span class="math inline">\(z\)</span> and <span class="math inline">\(x_1\)</span> (no need for estimating).</p></li>
-<li><p><span class="math inline">\(\tau\)</span> is the mean of latent factors; For the observed variables, their mean will be fed to <span class="math inline">\(\tau_z\)</span> and <span class="math inline">\(\tau_{x_1}\)</span>.</p></li>
+<li><p><span class="math inline">\(\nu_{z}\)</span> and <span class="math inline">\(\nu_{x_1}\)</span> are fixed at the means of <span class="math inline">\(z\)</span> and <span class="math inline">\(x_1\)</span> (no need for estimation); but <span class="math inline">\(\nu_{item}\)</span> serve as item intercepts.</p></li>
+<li><p><span class="math inline">\(\tau\)</span> is the mean of latent factors; For the observed variables, their means will be fed to <span class="math inline">\(\tau_z\)</span> and <span class="math inline">\(\tau_{x_1}\)</span>.</p></li>
 <li><p><span class="math inline">\(\sigma^2_{z}\)</span> and <span class="math inline">\(\sigma^2_{x_1}\)</span> are zero; <span class="math inline">\(\sigma_{zx}\)</span> is zero; instead, <span class="math inline">\(\Phi\)</span> represents those parameters (but not estimated, because they are observed variables; no need to estimate them).</p></li>
 <li><p><span class="math inline">\(n\)</span> equals number of covariates including z (3 in this example; <span class="math inline">\(\eta\)</span>, z, x1)</p></li>
 <li><p><span class="math inline">\(k\)</span> = number of interaction effects (1 in this example; <span class="math inline">\(\tau_1\)</span>: effect between <span class="math inline">\(\eta_1\)</span> and z)</p></li>
@@ -320,7 +316,7 @@ T = \Gamma A + C_1' A'\Omega A
 <section id="means-of-indicators-of-exogenous-factors" class="level3">
 <h3 class="anchored" data-anchor-id="means-of-indicators-of-exogenous-factors">Means of indicators of exogenous factors</h3>
 <p><span class="math display">\[
-\mu_x(c_1) = \nu +
+\mu_x(c_1) = \nu_x +
 \Lambda_x
 \mathbf{\tau}
 A
@@ -329,24 +325,24 @@ C_1
 </section>
 <section id="means-of-indicators-of-endogenous-factor" class="level3">
 <h3 class="anchored" data-anchor-id="means-of-indicators-of-endogenous-factor">Means of indicators of endogenous factor</h3>
-<ul>
-<li><p>Here, we have one observed variable for endogenous variable;</p></li>
-<li><p>It is treated as a latent factor with a single variable; with the mean and variance of the indicator fixed to zero; (<span class="math inline">\(\nu_y\)</span> == 0)</p></li>
-<li><p><span class="math inline">\((\mathbf{\tau} +A C_1)\)</span> = <span class="math inline">\(tAc\)</span></p></li>
-</ul>
 <p><span class="math display">\[
 \mu_y(c_1) = \nu_y + \Lambda_y(\alpha + \Gamma (\mathbf{\tau} +A C_1) + (\mathbf{\tau} +A C_1)'\Omega (\mathbf{\tau} +A C_1) )
 \]</span></p>
+<ul>
+<li><p>with <span class="math inline">\((\mathbf{\tau} +A C_1)\)</span> = <span class="math inline">\(tAc\)</span></p></li>
+<li><p>Here, we have one observed variable for endogenous variable;</p></li>
+<li><p>It is treated as a latent factor with a single variable; with the mean and variance of the indicator fixed to zero; (<span class="math inline">\(\nu_y\)</span> == 0)</p></li>
+</ul>
 </section>
-<section id="means-of-indicators-of-exogenous-factors-1" class="level3">
-<h3 class="anchored" data-anchor-id="means-of-indicators-of-exogenous-factors-1">Means of indicators of exogenous factors</h3>
+<section id="covariance-matrix-of-exogenous-indicators" class="level3">
+<h3 class="anchored" data-anchor-id="covariance-matrix-of-exogenous-indicators">Covariance matrix of exogenous indicators</h3>
 <p><span class="math display">\[
 \Sigma_{xx}(c_1) =
 \Lambda_x A I_{block} A' \Lambda_x' + \Theta
 \]</span></p>
 </section>
-<section id="covariance-matrix-of-exogenous-indicators" class="level3">
-<h3 class="anchored" data-anchor-id="covariance-matrix-of-exogenous-indicators">Covariance matrix of exogenous indicators</h3>
+<section id="covariance-matrix-between-exogenous-and-endogenous-indicators" class="level3">
+<h3 class="anchored" data-anchor-id="covariance-matrix-between-exogenous-and-endogenous-indicators">Covariance matrix between exogenous and endogenous indicators</h3>
 <p><span class="math display">\[
 \Sigma_{xy}(c_1) = \Lambda_xA
 I_{\text{block}}
@@ -355,26 +351,26 @@ T'
 </section>
 <section id="covariance-matrix-of-endogenous-indicators" class="level3">
 <h3 class="anchored" data-anchor-id="covariance-matrix-of-endogenous-indicators">Covariance matrix of endogenous indicators</h3>
+<p><span class="math display">\[
+\Sigma_{yy}(c1) = \Lambda*y( T I_{\text{block}} T')\Lambda\_y' +
+\Lambda*y*\Psi{y}\Lambda\_y' + \theta\_y
+\]</span></p>
 <ul>
 <li>Again, we have only observed variable for endogenous factor.</li>
 <li><span class="math inline">\(\theta_y\)</span> is fixed to zero; instead <span class="math inline">\(\Psi_{y}\)</span></li>
 </ul>
+<p>The above model-implied <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\Sigma\)</span> are fed into the multivariate normal density, <span class="math inline">\(\phi\)</span>. The density value for the realizaiton (x, y) across k-dimensional real space <span class="math inline">\(R^m\)</span> is</p>
 <p><span class="math display">\[
-\Sigma\_{yy}(c1) = \Lambda*y( T I_{\text{block}} T')\Lambda\_y' +
-\Lambda*y*\Psi{y}\Lambda\_y' + \theta\_y
-\]</span></p>
-<p>The above model-implied <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\Sigma\)</span> are fed into the multivariate normal density, <span class="math inline">\(\phi\)</span>. The density value for the realizaiton (x, y) across k-dimensional real space <span class="math inline">\(R^k\)</span> is</p>
-<p><span class="math display">\[
-f(x, y) = \int_{R^k} \phi(c_1)\phi_{\mu(c_1),\Sigma(c_1)} (x,y)  \,dc_1
+f(x, y) = \int_{R^m} \phi(c_1)\phi_{\mu(c_1),\Sigma(c_1)} (x,y)  \,dc_1
 \]</span></p>
 </section>
 </section>
 <section id="estimation" class="level2">
 <h2 class="anchored" data-anchor-id="estimation">Estimation</h2>
 <ul>
-<li>Following is the parameter matrix aligned with the above LMS specification.</li>
-<li>The <code>NA</code> element is the parameter that will be estimated.</li>
-<li>Note. Theta.d == <span class="math inline">\(\Theta\)</span>, Theta.e == <span class="math inline">\(\theta_y\)</span></li>
+<li>The parameter matrices listed below align with the LMS specification mentioned earlier.</li>
+<li>The element NA represents the parameter that is to be estimated.</li>
+<li>Note. Theta.d = <span class="math inline">\(\Theta\)</span>, Theta.e = <span class="math inline">\(\theta_y\)</span></li>
 </ul>
 <div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-5_3511f31cdb02a2766d658bc8a87bcc3a">
 <div class="cell-output cell-output-stdout">
@@ -449,7 +445,7 @@ $Omega
 [3,]    0    0    0</code></pre>
 </div>
 </div>
-<p>With the random starting values,</p>
+<p>With the starting values, EM algorithm starts.</p>
 <div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-6_600a2df18013921606b2259f860c6003">
 <div class="cell-output cell-output-stdout">
 <pre><code>$Lambda.x
@@ -523,21 +519,20 @@ $Omega
 [3,]    0  0.00    0</code></pre>
 </div>
 </div>
-<p>From this, EM algorithm starts,</p>
-<p>Because of the nonlinear relationship mentioned above, the integral of the mixture density</p>
-<p>The m-dimensional integral above can be approximated by numerical methods, for example, by application of Hermite-Gaussian quadrature formulas s for numerical integration (Isaacson &amp; Keller, 1966).</p>
+<p>Because of the nonlinear relationship mentioned above, the integral of the mixture density cannot be solved analytically.</p>
+<p>The <span class="math inline">\(m\)</span>-dimensional integral above can be approximated by numerical methods, for example, by application of Hermite-Gaussian quadrature formulas s for numerical integration (Isaacson &amp; Keller, 1966).</p>
 <p>To apply Hermite-Gaussian quadrature formulas, the integration variable <span class="math inline">\(c_1\)</span> is substituted by</p>
 <p><span class="math display">\[
 u = 2^{-1/2}c_1
 \]</span></p>
-<p>The m-dimensional integral above is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function <span class="math inline">\(exp(-u^2)\)</span> in the integrand by finite sums.</p>
+<p>The <span class="math inline">\(m\)</span>-dimensional integral above is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function <span class="math inline">\(exp(-u^2)\)</span> in the integrand by finite sums.</p>
 <p>The quadrature formula provides M weights w_j &lt;- probability ‘p’ in my code.</p>
-<p>m is quadrature points, and 16 here (larger should better approximate the distribution).</p>
+<p><span class="math inline">\(m\)</span> is quadrature points, and 16 here (larger should better approximate the distribution).</p>
 <p><span class="math display">\[
-f(x, y) = \int_{R^k} \pi^{-m/2}exp(-u'u)\phi_{\mu(2^{-1/2}c_1),\Sigma(2^{-1/2}c_1)} (x,y)  \,du
+f(x, y) = \int_{R^m} \pi^{-m/2}exp(-u'u)\phi_{\mu(2^{-1/2}c_1),\Sigma(2^{-1/2}c_1)} (x,y)  \,du
 \]</span></p>
 <p><span class="math inline">\(u = 2^{-1/2}c_1\)</span> =</p>
-<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-7_4b191a4206715ddce27500cdae61ee0f">
+<div class="cell" data-hash="LMS_test_cache/html/unnamed-chunk-7_10d69ebee87df1e85ca9111d13efade1">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate Hermite Quadrature &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="co"># Number of interaction effects</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>quad <span class="ot">&lt;-</span> <span class="fu">quadrature</span>(m, k)</span>
@@ -576,12 +571,14 @@ f(x, y) = \int_{R^k} \pi^{-m/2}exp(-u'u)\phi_{\mu(2^{-1/2}c_1),\Sigma(2^{-1/2}c_
 [16] 1.497815e-10</code></pre>
 </div>
 </div>
+<p>With some definitions (p.&nbsp;465), the above integral can be reduced to the standard notation for a finite mixture density:</p>
 <p><span class="math display">\[
 f(x, y) \approx \sum_{j=1}^{M} w_j\phi_{\mu_u,\Sigma_u} (x,y)
-\]</span></p>
+\]</span> Here, <span class="math inline">\(w_j\)</span> is the same as <span class="math inline">\(\rho_j\)</span> in Eq 29 in KM 2000.</p>
 </section>
 <section id="compute-e-step" class="level2">
 <h2 class="anchored" data-anchor-id="compute-e-step">Compute E-step</h2>
+<p>Followed by p.&nbsp;466,</p>
 <p><span class="math display">\[
 p^{(r)}(j=j|x_i, y_i) = \frac{w_j\phi(x,y)}{f(x_i, y_i)}
 \]</span></p>
@@ -641,7 +638,7 @@ p^{(r)}(j=j|x_i, y_i) = \frac{w_j\phi(x,y)}{f(x_i, y_i)}
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  A.z <span class="ot">&lt;-</span> matrices<span class="sc">$</span>A <span class="sc">%*%</span> z<span class="fl">.1</span> <span class="co"># A.C </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Inside <code>MU_lms</code> and <code>SIGMA_lms</code>, <span class="math inline">\(Phi\)</span> (covariance matrix of exogenous variables) are converted to <span class="math inline">\(A\)</span> and given <span class="math inline">\(C_1\)</span> vector; <code>A.C = A %*% c.1</code></p>
+<p>Inside <code>MU_lms</code> and <code>SIGMA_lms</code>, <span class="math inline">\(\Phi\)</span> (covariance matrix of exogenous variables) are converted to <span class="math inline">\(A\)</span> and given <span class="math inline">\(C_1\)</span> vector; <code>A.C = A %*% c.1</code></p>
 </section>
 <section id="compute-m-step" class="level2">
 <h2 class="anchored" data-anchor-id="compute-m-step">Compute M-step</h2>
@@ -672,16 +669,18 @@ p^{(r)}(j=j|x_i, y_i) = \frac{w_j\phi(x,y)}{f(x_i, y_i)}
 </div>
 </div>
 <ul>
-<li>The estimates maximizing the following likelihood will keep the starting values updated until the new likelihood is not any different from the previous likelihood (e.g., 0.001)</li>
+<li>The estimates that maximize the given likelihood will continue to update the starting values until there is no discernible difference between the new likelihood and the previous one (e.g., a difference of 0.001).</li>
 </ul>
 </section>
 <section id="cases-for-binary-indicators" class="level2">
 <h2 class="anchored" data-anchor-id="cases-for-binary-indicators">Cases for binary indicators</h2>
 <p>For scenarios where <span class="math inline">\(item\)</span> is binary items (like our cases), things get more complicated.</p>
-<p>Using latent response variable framework (Muthen &amp; Asp, 2002), <span class="math inline">\(item^*\)</span> is used instead of <span class="math inline">\(item\)</span> for multivariate normal distribution with some more constraints (i.g., <span class="math inline">\(E(item^*)=0\)</span> and <span class="math inline">\(V(item^*)=1\)</span>. The relationship between binary indicators and other variables is estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case).</p>
-<p>These correlations are used to compute the likelihood values.</p>
+<p>Using latent response variable framework (Muthén &amp; Asparouhov, 2002) <span class="math inline">\(item^*\)</span> is used instead of <span class="math inline">\(item\)</span> for multivariate normal distribution with some more constraints (i.g., <span class="math inline">\(E(item^*)=0\)</span> and <span class="math inline">\(V(item^*)=1\)</span>.</p>
+<!-- The relationship between binary indicators and other variables is estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case).  -->
+<!-- These correlations are used to compute the likelihood values.  -->
 <p><span class="math inline">\(item^*\)</span> will be dichotomized by threshold estimates, with the appropriate link function (e.g., logit or probit).</p>
 <p>Due to some complication to make estimator for categorical indicators, I stop here. However the general procedure is consistent with the continuous indicators.</p>
+<p>Muthén, B., &amp; Asparouhov, T. (2002). Latent variable analysis with categorical outcomes: Multiple-group and growth modeling in Mplus. Mplus web notes, 4(5), 1-22.</p>
 </section>
 <section id="take-away" class="level2">
 <h2 class="anchored" data-anchor-id="take-away">Take away</h2>

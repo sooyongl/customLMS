@@ -95,13 +95,13 @@ First, I'd like to answer two major concerns we discussed last week.
 
 ## Two major concerns
 
-1. LMS is based on the interaction between two latent variables
+**1. LMS is based on the interaction between two latent variables**
 
   - While KM initially introduced the LMS to address the interaction effect between two latent variables, it isn't strictly limited to two latent factors. One of these variables can indeed be an observed one. This is evident as many empirical studies (and simulation studies as well) specifically employ this method for non-uniform DIF, especially when using the MIMIC model for DIF detection.
 
   - So, I believe that using LMS for FLPS scenarios makes sense. 
 
-2. LMS is based on the normality assumption, but the treatment assignment violates it.
+**2. LMS is based on the normality assumption, but the treatment assignment violates it**
 
   -   When the normality assumption in LMS is violated, it causes problems. And it is confirmed by previous research.
 
@@ -174,7 +174,7 @@ colMeans(sim_res) # True : 0.5  -0.3   0.4
   
   - Numerous other studies specifically utilize these interaction effects for non-uniform DIF detection.
 
-  - I've also conducted a quick simulation on this matter, and the results appear unbiased. Please refer to [the Mplus output](https://github.com/sooyongl/customLMS/blob/main/monte_binary.out) for details.
+  - I've also conducted a quick simulation on this matter, and the results appear unbiased. Please refer to [the Mplus output](https://raw.githubusercontent.com/sooyongl/customLMS/main/monte_binary.out) for details.
 
 
 ## LMS with one latent factor and a binary obervsed variable
@@ -212,21 +212,23 @@ $$
 \epsilon_{\eta_1} \sim N(0, \sigma_{\eta_1})
 \end{align}
 ```
-For simplicity, instead of $\beta_1$ regression, the covariance between $\eta_1$ and $x_1$ is estimated (meaning $\sigma_{eta_1}$ directly indicating the factor variance instead of residual variance).
+
+For simplicity, instead of $\beta_1$ regression, the covariance between $\eta_1$ and $x_1$ is estimated (meaning $\sigma_{\eta_1}$ directly indicating the factor variance instead of residual variance).
 
 The measurement model is specified as:
 
 ```{=tex}
 \begin{align}
 item_1 = \lambda_{1} \eta_1 + \epsilon_{item_1} \\
-item_2 = \lambda_{1} \eta_1 + \epsilon_{item_2} \\
-item_3 = \lambda_{1} \eta_1 + \epsilon_{item_3} \\
+item_2 = \lambda_{2} \eta_1 + \epsilon_{item_2} \\
+item_3 = \lambda_{3} \eta_1 + \epsilon_{item_3} \\
 \epsilon_{item} \sim N(0, \sigma_{item})
 \end{align}
 ```
+
 Again, the case where $item$ are binary items will be discussed later.
 
-The exogenous variable vector $(\eta_1, z, x )$ can be broke using Cholesky decomposition (see Eq 8 from KM 2000; I am not sure, but AC will be covariance matrix; KM might make a mistake).
+The exogenous variable vector $(\eta_1, z, x )$ can be decomposed using Cholesky decomposition (see Eq 8 from KM 2000; AC should be covariance matrix, but it was followed by KM 2000 notation).
 
 $$
 \begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} = 
@@ -238,7 +240,7 @@ a_{31} & a_{32} & a_{32} \\
 \begin{pmatrix}c_1 \\ c_2 \\ c_3 \end{pmatrix} = AC,
 $$
 
-where A is a lower triangle of Cholesky decomposition of the variance-covariance matrix of the exogenous variable vector (which will be represented by $\Phi$ = $AC$), and $c_1$ \~ $c_3$ are standardized normal variables, which are used to normalize the non-normal distribution. Specifically, in this case, there's only one latent interaction effects, $c_2$ and $c_3$ are constrained to zero, thus
+where A is a lower triangle of Cholesky decomposition of the variance-covariance matrix of the exogenous variable vector (which will be represented by $\Phi$ = $AC$), and $c_1$ \~ $c_3$ are standardized normal variables, which are used to normalize the non-normal distribution. Specifically, in this case, there's only one latent interaction effects, $c_2$ and $c_3$ are constrained to zero; thus
 
 $$
 \begin{pmatrix}\eta \\ Z \\ x_1 \end{pmatrix} = 
@@ -250,7 +252,7 @@ a_{31} & a_{32} & a_{32} \\
 \begin{pmatrix}c_1 \\ 0 \\ 0 \end{pmatrix} = AC,
 $$
 
-Note that $c_1$ cannot be directly estimated; thus, $c_1$ will be replaced with Hermite-Gaussian quadrature later in the procedure.
+Note that $c_1$ cannot be directly estimated; and, $c_1$ will be replaced with Hermite-Gaussian quadrature later in the procedure.
 
 To simplify,
 
@@ -266,7 +268,7 @@ $$
 
 ## Model implied mean and covariance
 
-The model implied mean vectors and covariance below will follow multivariate normal distribution based on LMS specification
+The model implied mean vectors and covariance below will follow multivariate normal distribution based on LMS specification. These components will be used to multivariate normal density function to compute likelihood values.
 
 The following equations come from Eq.18 \~ Eq.22 (KM 2000).
 
@@ -275,9 +277,9 @@ First,
 ```{=tex}
 \begin{align}
 \Lambda_x = \begin{pmatrix}
-\lambda & 0 & 0 \\ 
-\lambda & 0 & 0 \\ 
-\lambda & 0 & 0 \\ 
+\lambda_1 & 0 & 0 \\ 
+\lambda_2 & 0 & 0 \\ 
+\lambda_3 & 0 & 0 \\ 
 0 & 1 & 0 \\ 
 0 & 0 & 1 
 \end{pmatrix} && 
@@ -304,7 +306,7 @@ I_{\text{block}} = \begin{pmatrix}
 1
 \end{pmatrix} &&
 
-\mathbf{\kappa_{x}} = \begin{pmatrix}
+\mathbf{\nu_{x}} = \begin{pmatrix}
 \nu_{item_1}  \\ 
 \nu_{item_2}  \\ 
 \nu_{item_3}  \\ 
@@ -338,9 +340,9 @@ $$
 
 **Note.**
 
--   $\nu_{z}$ and $\nu_{x_1}$ are fixed at the means of $z$ and $x_1$ (no need for estimating).
+-   $\nu_{z}$ and $\nu_{x_1}$ are fixed at the means of $z$ and $x_1$ (no need for estimation); but $\nu_{item}$ serve as item intercepts.
 
--   $\tau$ is the mean of latent factors; For the observed variables, their mean will be fed to $\tau_z$ and $\tau_{x_1}$.
+-   $\tau$ is the mean of latent factors; For the observed variables, their means will be fed to $\tau_z$ and $\tau_{x_1}$.
 
 -   $\sigma^2_{z}$ and $\sigma^2_{x_1}$ are zero; $\sigma_{zx}$ is zero; instead, $\Phi$ represents those parameters (but not estimated, because they are observed variables; no need to estimate them).
 
@@ -355,7 +357,7 @@ $$
 ### Means of indicators of exogenous factors
 
 $$
-\mu_x(c_1) = \nu +
+\mu_x(c_1) = \nu_x +
 \Lambda_x
 \mathbf{\tau}
 A
@@ -364,24 +366,25 @@ $$
 
 ### Means of indicators of endogenous factor
 
--   Here, we have one observed variable for endogenous variable;
-
--   It is treated as a latent factor with a single variable; with the mean and variance of the indicator fixed to zero; ($\nu_y$ == 0)
-
--   $(\mathbf{\tau} +A C_1)$ = $tAc$
-
 $$
 \mu_y(c_1) = \nu_y + \Lambda_y(\alpha + \Gamma (\mathbf{\tau} +A C_1) + (\mathbf{\tau} +A C_1)'\Omega (\mathbf{\tau} +A C_1) )
 $$
 
-### Means of indicators of exogenous factors
+- with  $(\mathbf{\tau} +A C_1)$ = $tAc$
+
+-   Here, we have one observed variable for endogenous variable;
+
+-   It is treated as a latent factor with a single variable; with the mean and variance of the indicator fixed to zero; ($\nu_y$ == 0)
+
+
+### Covariance matrix of exogenous indicators
 
 $$
 \Sigma_{xx}(c_1) = 
 \Lambda_x A I_{block} A' \Lambda_x' + \Theta
 $$
 
-### Covariance matrix of exogenous indicators
+### Covariance matrix between exogenous and endogenous indicators
 
 $$
 \Sigma_{xy}(c_1) = \Lambda_xA
@@ -391,27 +394,28 @@ $$
 
 ### Covariance matrix of endogenous indicators
 
--   Again, we have only observed variable for endogenous factor.
--   $\theta_y$ is fixed to zero; instead $\Psi_{y}$
-
 $$ 
-\Sigma\_{yy}(c1) = \Lambda*y( T I_{\text{block}} T')\Lambda\_y' +
+\Sigma_{yy}(c1) = \Lambda*y( T I_{\text{block}} T')\Lambda\_y' +
 \Lambda*y*\Psi{y}\Lambda\_y' + \theta\_y
 $$
 
+-   Again, we have only observed variable for endogenous factor.
+-   $\theta_y$ is fixed to zero; instead $\Psi_{y}$
 
-The above model-implied $\mu$ and $\Sigma$ are fed into the multivariate normal density, $\phi$. The density value for the realizaiton (x, y) across k-dimensional real space $R^k$ is
+
+
+The above model-implied $\mu$ and $\Sigma$ are fed into the multivariate normal density, $\phi$. The density value for the realizaiton (x, y) across k-dimensional real space $R^m$ is
 
 $$
-f(x, y) = \int_{R^k} \phi(c_1)\phi_{\mu(c_1),\Sigma(c_1)} (x,y)  \,dc_1
+f(x, y) = \int_{R^m} \phi(c_1)\phi_{\mu(c_1),\Sigma(c_1)} (x,y)  \,dc_1
 $$
 
 
 ## Estimation
 
--   Following is the parameter matrix aligned with the above LMS specification.
--   The `NA` element is the parameter that will be estimated.
--   Note. Theta.d == $\Theta$, Theta.e == $\theta_y$
+-   The parameter matrices listed below align with the LMS specification mentioned earlier.
+-   The element NA represents the parameter that is to be estimated.
+-   Note. Theta.d = $\Theta$, Theta.e = $\theta_y$
 
 ```{r echo = F}
 mat <- inp_model$matrices$class1
@@ -419,18 +423,16 @@ mat
 ```
 
 
-With the random starting values,
+With the starting values, EM algorithm starts.
 
 ```{r echo = F}
 mod.filled$matrices$class1
 ```
 
-From this, EM algorithm starts,
 
+Because of the nonlinear relationship mentioned above, the integral of the mixture density cannot be solved analytically.
 
-Because of the nonlinear relationship mentioned above, the integral of the mixture density
-
-The m-dimensional integral above can be approximated by numerical methods, for example, by application of Hermite-Gaussian quadrature formulas s for numerical integration (Isaacson & Keller, 1966).
+The $m$-dimensional integral above can be approximated by numerical methods, for example, by application of Hermite-Gaussian quadrature formulas s for numerical integration (Isaacson & Keller, 1966).
 
 To apply Hermite-Gaussian quadrature formulas, the integration variable $c_1$ is substituted by
 
@@ -438,22 +440,21 @@ $$
 u = 2^{-1/2}c_1
 $$
 
-The m-dimensional integral above is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function $exp(-u^2)$ in the integrand by finite sums.
+The $m$-dimensional integral above is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function $exp(-u^2)$ in the integrand by finite sums.
 
 
 The quadrature formula provides M weights w_j \<- probability 'p' in my code.
 
-m is quadrature points, and 16 here (larger should better approximate the distribution).
+$m$ is quadrature points, and 16 here (larger should better approximate the distribution).
 
 $$
-f(x, y) = \int_{R^k} \pi^{-m/2}exp(-u'u)\phi_{\mu(2^{-1/2}c_1),\Sigma(2^{-1/2}c_1)} (x,y)  \,du
+f(x, y) = \int_{R^m} \pi^{-m/2}exp(-u'u)\phi_{\mu(2^{-1/2}c_1),\Sigma(2^{-1/2}c_1)} (x,y)  \,du
 $$
 
 $u = 2^{-1/2}c_1$ =
 
 
 ```{r}
-
 # Calculate Hermite Quadrature <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 k <- 1 # Number of interaction effects
 quad <- quadrature(m, k)
@@ -471,11 +472,18 @@ w
 ```
 
 
+With some definitions (p. 465), the above integral can be reduced to the standard notation for a finite mixture density: 
+
+
 $$
 f(x, y) \approx \sum_{j=1}^{M} w_j\phi_{\mu_u,\Sigma_u} (x,y)
 $$
+Here, $w_j$ is the same as $\rho_j$ in Eq 29 in KM 2000.
+
 
 ## Compute E-step
+
+Followed by p. 466,
 
 $$
 p^{(r)}(j=j|x_i, y_i) = \frac{w_j\phi(x,y)}{f(x_i, y_i)}
@@ -519,7 +527,7 @@ head(P) # N x m matrix where N is the number of individuals.
   
 ```
 
-Inside `MU_lms` and `SIGMA_lms`, $Phi$ (covariance matrix of exogenous variables) are converted to $A$ and given $C_1$ vector; `A.C = A %*% c.1`
+Inside `MU_lms` and `SIGMA_lms`, $\Phi$ (covariance matrix of exogenous variables) are converted to $A$ and given $C_1$ vector; `A.C = A %*% c.1`
 
 
 ## Compute M-step
@@ -549,24 +557,24 @@ res <- sum(res0)
 -res
 ```
 
--   The estimates maximizing the following likelihood will keep the starting values updated until the new likelihood is not any different from the previous likelihood (e.g., 0.001)
+-   The estimates that maximize the given likelihood will continue to update the starting values until there is no discernible difference between the new likelihood and the previous one (e.g., a difference of 0.001).
 
 
 ## Cases for binary  indicators
 
 For scenarios where $item$ is binary items (like our cases), things get more complicated.
 
+Using latent response variable framework (Muthén & Asparouhov, 2002) $item^*$ is used instead of $item$ for multivariate normal distribution with some more constraints (i.g., $E(item^*)=0$ and $V(item^*)=1$. 
 
-Using latent response variable framework (Muthen & Asp, 2002), $item^*$ is used instead of $item$ for multivariate normal distribution with some more constraints (i.g., $E(item^*)=0$ and $V(item^*)=1$. The relationship between binary indicators and other variables is estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case). 
+<!-- The relationship between binary indicators and other variables is estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case).  -->
 
-These correlations are used to compute the likelihood values. 
+<!-- These correlations are used to compute the likelihood values.  -->
 
 $item^*$ will be dichotomized by threshold estimates, with the appropriate link function (e.g., logit or probit). 
 
-
 Due to some complication to make estimator for categorical indicators, I stop here. However the general procedure is consistent with the continuous indicators.
 
-
+Muthén, B., & Asparouhov, T. (2002). Latent variable analysis with categorical outcomes: Multiple-group and growth modeling in Mplus. Mplus web notes, 4(5), 1-22.
 
 ## Take away
 
