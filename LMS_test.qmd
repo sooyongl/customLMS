@@ -97,21 +97,21 @@ First, I'd like to answer two major concerns we discussed last week.
 
 1. LMS is based on the interaction between two latent variables
 
-- While KM initially introduced the LMS to address the interaction effect between two latent variables, it isn't strictly limited to two latent factors. One of these variables can indeed be an observed one. This is evident as many empirical studies (and simulation studies as well) specifically employ this method for non-uniform DIF, especially when using the MIMIC model for DIF detection.
+  - While KM initially introduced the LMS to address the interaction effect between two latent variables, it isn't strictly limited to two latent factors. One of these variables can indeed be an observed one. This is evident as many empirical studies (and simulation studies as well) specifically employ this method for non-uniform DIF, especially when using the MIMIC model for DIF detection.
 
-- So, I believe that using LMS for FLPS scenarios makes sense. 
+  - So, I believe that using LMS for FLPS scenarios makes sense. 
 
 2. LMS is based on the normality assumption, but the treatment assignment violates it.
 
--   When the normality assumption in LMS is violated, it causes problems. And it is confirmed by previous research.
+  -   When the normality assumption in LMS is violated, it causes problems. And it is confirmed by previous research.
 
-- But, things get different for the latent interaction between an latent variable and an observed variable (but the observed variable isn't normal like a binary case).
+  - But, things get different for the latent interaction between an latent variable and an observed variable (but the observed variable isn't normal like a binary case).
 
--   I don't believe that the normality in observed variables is not necessary for LMS, because it is used as exogenous variables.
+  -   I don't believe that the normality in observed variables is not necessary for LMS, because it is used as exogenous variables.
 
--   I believe that this situation is the same as a regression model with a dummy variable, where the normality of the dummy variable isn't typically a concern.
+  -   I believe that this situation is the same as a regression model with a dummy variable, where the normality of the dummy variable isn't typically a concern.
 
-- Below is the regression model with two predictors; one is continuous and the other one is binary. When simulating 100 times, the interaction effects and other coefficients are not biased.
+  - Below is the regression model with two predictors; one is continuous and the other one is binary. When simulating 100 times, the interaction effects and other coefficients are not biased.
 
 #### Typical regression with dummy variable and its interaction
 
@@ -130,15 +130,15 @@ colMeans(sim_res) # True : 0.5  -0.3   0.4
 ```
 
 
-#### MVN estimation for the regression with dummy variable and its interaction
+#### MVN estimator for the regression with dummy variable and its interaction
 
--   This holds true even when employing a multivariate normal distribution to estimate a model where a dummy variable serves as one of the independent variables. This is demonstrated in the simulation results below, which were obtained using `lavaan` The software uses a multivariate normal distribution to fit all the variables in the model, including y, x, and the dummy variable.
+  -   This holds true even when employing a multivariate normal distribution to estimate a model where a dummy variable serves as one of the independent variables. This is demonstrated in the simulation results below, which were obtained using `lavaan` The package uses a multivariate normal distribution to fit all the variables in the model, including y, x, and the dummy variable.
 
--   Multivariate normal distribution assumes that all variables follow a normal distribution; however, a dummy variable inherently violates this assumption.
+  -   Multivariate normal distribution assumes that all variables follow a normal distribution; however, a dummy variable inherently violates this assumption.
 
--   Despite the dummy variable not following a normal distribution, its non-normality does not impact the estimates as below.
+  -   Despite the dummy variable not following a normal distribution, its non-normality does not impact the estimates as below.
 
--   Thus, using a binary variable as an independent variable is still consistent with the normality assumption.
+  -   Thus, using a binary variable as an independent variable is still consistent with the normality assumption.
 
 ```{r}
 # It is the same when using multivariate normal distribution
@@ -170,11 +170,11 @@ colMeans(sim_res) # True : 0.5  -0.3   0.4
 
 ```
 
-- The same unbiased results are also supported by our simulation studies. 
+  - The same unbiased results are also supported by our simulation studies. 
+  
+  - Numerous other studies specifically utilize these interaction effects for non-uniform DIF detection.
 
-- Numerous other studies specifically utilize these interaction effects for non-uniform DIF detection.
-
-- I've also conducted a quick simulation on this matter, and the results appear unbiased. Please refer to [the Mplus output](https://github.com/sooyongl/customLMS/blob/main/monte_binary.out) for details.
+  - I've also conducted a quick simulation on this matter, and the results appear unbiased. Please refer to [the Mplus output](https://github.com/sooyongl/customLMS/blob/main/monte_binary.out) for details.
 
 
 ## LMS with one latent factor and a binary obervsed variable
