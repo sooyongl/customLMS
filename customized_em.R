@@ -3,6 +3,7 @@ for(i in c("source/utils.R",
            "source/customized_sampleStat.R",
            "source/customized_Likelihood.R")) { source(i) }
 
+# based on `nlsem` packag
 # `mvtnorm` package is needed for normal density
 # `gaussquad` is needed for Hermite-Gaussian quadrature
 # `nlme::fdHess` is needed to compute Hessian matrix for SE

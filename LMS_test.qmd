@@ -335,6 +335,15 @@ $$
 $$
 
 $$
+\Phi = \begin{pmatrix}
+V(\eta_1) &    & \\ 
+0 &  V(z)  & \\ 
+0&  cov(z,x_1)  & V(x_1)\\
+\end{pmatrix} = AC_1
+$$
+
+
+$$
 T = \Gamma A + C_1' A'\Omega A
 $$
 
@@ -359,9 +368,9 @@ $$
 $$
 \mu_x(c_1) = \nu_x +
 \Lambda_x
-\mathbf{\tau}
+(\mathbf{\tau}+
 A
-C_1
+C_1)
 $$
 
 ### Means of indicators of endogenous factor
@@ -370,7 +379,6 @@ $$
 \mu_y(c_1) = \nu_y + \Lambda_y(\alpha + \Gamma (\mathbf{\tau} +A C_1) + (\mathbf{\tau} +A C_1)'\Omega (\mathbf{\tau} +A C_1) )
 $$
 
-- with  $(\mathbf{\tau} +A C_1)$ = $tAc$
 
 -   Here, we have one observed variable for endogenous variable;
 
@@ -395,8 +403,8 @@ $$
 ### Covariance matrix of endogenous indicators
 
 $$ 
-\Sigma_{yy}(c1) = \Lambda*y( T I_{\text{block}} T')\Lambda\_y' +
-\Lambda*y*\Psi{y}\Lambda\_y' + \theta\_y
+\Sigma_{yy}(c1) = \Lambda_y( T I_{\text{block}} T')\Lambda_y' +
+\Lambda_y\Psi{y}\Lambda_y' + \theta_y
 $$
 
 -   Again, we have only observed variable for endogenous factor.
@@ -404,7 +412,7 @@ $$
 
 
 
-The above model-implied $\mu$ and $\Sigma$ are fed into the multivariate normal density, $\phi$. The density value for the realizaiton (x, y) across k-dimensional real space $R^m$ is
+The above model-implied $\mu$ and $\Sigma$ are fed into the multivariate normal density, $\phi$. The density value for the realizaiton (x, y) across $m$-dimensional real space $R^m$ is
 
 $$
 f(x, y) = \int_{R^m} \phi(c_1)\phi_{\mu(c_1),\Sigma(c_1)} (x,y)  \,dc_1
@@ -443,7 +451,7 @@ $$
 The $m$-dimensional integral above is approximated by iterated application (k times) of the Hermite-Gaussian quadrature formula, which approximates one-dimensional integrals with weight function $exp(-u^2)$ in the integrand by finite sums.
 
 
-The quadrature formula provides M weights w_j \<- probability 'p' in my code.
+<!-- The quadrature formula provides $M$ weights $w_j$ \<- probability 'p' in my code. -->
 
 $m$ is quadrature points, and 16 here (larger should better approximate the distribution).
 
@@ -458,6 +466,22 @@ $u = 2^{-1/2}c_1$ =
 # Calculate Hermite Quadrature <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 k <- 1 # Number of interaction effects
 quad <- quadrature(m, k)
+
+# quadrature <- function (m, k) 
+# {
+#   one.dim <- gaussquad::hermite.h.quadrature.rules(m)[[m]]
+#   test <- as.matrix(expand.grid(lapply(vector("list", k), function(x) {
+#     x <- 1:m
+#     x
+#   })))
+#   final.nodes <- matrix(one.dim$x[test], ncol = k, byrow = FALSE)
+#   permute.weights <- matrix(one.dim$w[test], ncol = k, byrow = FALSE)
+#   final.weights <- apply(permute.weights, 1, prod)
+#   n <- final.nodes * sqrt(2)
+#   w <- final.weights * pi^(-k/2)
+#   out <- list(n = n, w = w, k = k, m = m)
+#   out
+# }
 
 u <- quad$n
 u
@@ -478,7 +502,7 @@ With some definitions (p. 465), the above integral can be reduced to the standar
 $$
 f(x, y) \approx \sum_{j=1}^{M} w_j\phi_{\mu_u,\Sigma_u} (x,y)
 $$
-Here, $w_j$ is the same as $\rho_j$ in Eq 29 in KM 2000.
+Here, $w_j$ is the same as $\rho_j$ in Eq 29 in KM 2000, which serves as mixture probabilities in the mixture distribution.
 
 
 ## Compute E-step
@@ -509,11 +533,9 @@ head(P) # N x m matrix where N is the number of individuals.
 # E-step Ends         <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 ```
 
--   `MU_lms` and `SIGMA_lms` compute the model-implied mean and variance shown above at every $C_1$ (or $u$) (refer to [this](https://github.com/sooyongl/customLMS/blob/main/source/customized_sampleStat.R))
-
+-   **Note.** `MU_lms` and `SIGMA_lms` compute the model-implied mean and variance shown above at every $C_1$ (or $u$ in the above code) (refer to [this](https://github.com/sooyongl/customLMS/blob/main/source/customized_sampleStat.R))
 
 ```{r eval = F}
-
   matrices <- mod.filled$matrices$class1
   matrices$A <- t(chol(matrices$Phi))
   n <- nrow(matrices$A) # Number of covariates
@@ -557,14 +579,14 @@ res <- sum(res0)
 -res
 ```
 
--   The estimates that maximize the given likelihood will continue to update the starting values until there is no discernible difference between the new likelihood and the previous one (e.g., a difference of 0.001).
+-   The estimates that maximize the given likelihood will continue to update the starting values until there is no certain difference between the new likelihood and the previous one (e.g., a difference of 0.001).
 
 
 ## Cases for binary  indicators
 
 For scenarios where $item$ is binary items (like our cases), things get more complicated.
 
-Using latent response variable framework (Muthén & Asparouhov, 2002) $item^*$ is used instead of $item$ for multivariate normal distribution with some more constraints (i.g., $E(item^*)=0$ and $V(item^*)=1$. 
+Using latent response variable framework (Muthén, 1983, 1984; Muthén & Asparouhov, 2002) $item^*$ is used instead of $item$ for multivariate normal distribution with some more constraints (i.g., $E(item^*)=0$ and $V(item^*)=1$. 
 
 <!-- The relationship between binary indicators and other variables is estimated by tetrachoric correlation, polyserial correlation (point-biserial in our case).  -->
 
@@ -574,7 +596,11 @@ $item^*$ will be dichotomized by threshold estimates, with the appropriate link 
 
 Due to some complication to make estimator for categorical indicators, I stop here. However the general procedure is consistent with the continuous indicators.
 
-Muthén, B., & Asparouhov, T. (2002). Latent variable analysis with categorical outcomes: Multiple-group and growth modeling in Mplus. Mplus web notes, 4(5), 1-22.
+- Muthén, B. (1984). A general structural equation model with dichotomous, ordered categorical, and continuous latent variable indicators. Psychometrika, 49(1), 115-132.
+
+- Muthén, B., & Asparouhov, T. (2002). Latent variable analysis with categorical outcomes: Multiple-group and growth modeling in Mplus. Mplus web notes, 4(5), 1-22.
+
+
 
 ## Take away
 
