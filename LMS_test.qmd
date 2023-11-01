@@ -109,6 +109,10 @@ First, I'd like to answer two major concerns we discussed last week.
 
   -   I don't believe that the normality in observed variables is not necessary for LMS, because it is used as exogenous variables.
 
+> here is a set of observed independent variables x for which no 
+model structure is imposed, so that a distributional specification (such as normality) for x is unnecessary. This includes situations with multivariate regression and simultaneous equation modeling, where x's can be dummy coded and/or non-stochastic. (Muthen, 1984, p. 116)
+
+
   -   I believe that this situation is the same as a regression model with a dummy variable, where the normality of the dummy variable isn't typically a concern.
 
   - Below is the regression model with two predictors; one is continuous and the other one is binary. When simulating 100 times, the interaction effects and other coefficients are not biased.
